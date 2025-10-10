@@ -1,12 +1,13 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.BoardDto;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+@Tag(name = "여기는 ~~")
 @RestController
 @RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
@@ -16,7 +17,7 @@ public class TestController {
 
     @GetMapping("/test")
     public String helloWorld() {
-        return "Backend API is running on port 8080!";
+        return "Backend API is running on port 8000!";
     }
 
     @GetMapping
