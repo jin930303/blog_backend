@@ -2,23 +2,56 @@ package com.example.demo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    // ⭐ 1. CorsConfigurationSource Bean 정의: CORS 설정을 Security Filter에 명시적으로 주입합니다.
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // WebConfig.java와 동일하게 React 앱의 출처와 허용할 메서드를 정의합니다.
+        // WebConfig.java에서 설정했더라도 Security 설정에 명시적으로 필요합니다.
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://172.30.1.9:5500", // CORS 에러 발생 Origin (Live Server 주소)
+                "http://localhost:5500"
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Collections.singletonList("*"));
+        configuration.setAllowCredentials(true);
+
+        // 경로 "/api/v1/**"에 이 CORS 설정을 적용합니다.
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/v1/**", configuration);
+        return source;
+    }
+
+    @Bean
+    @Order(0)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // CORS 설정을 커스터마이징된 corsConfigurationSource Bean으로 적용
+                .cors(cors ->cors.configurationSource(corsConfigurationSource()))
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/**").permitAll() // /api/v1/로 시작하는 모든 요청 허용
                         // Swagger UI 및 정적 파일 경로도 허용 (필요할 경우)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/").permitAll()
+                        .requestMatchers("/board.html").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )
 
