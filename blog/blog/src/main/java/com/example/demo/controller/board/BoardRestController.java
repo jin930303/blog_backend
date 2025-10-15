@@ -17,6 +17,7 @@ public class BoardRestController {
     private final BoardService boardService;
 
 
+
     public BoardRestController(BoardService boardService) {
         this.boardService = boardService;
     }
@@ -37,5 +38,11 @@ public class BoardRestController {
     public ResponseEntity<List<BoardResponse>> getBoardList(){
         List<BoardResponse> list = boardService.findAllBoards();
         return ResponseEntity.ok(list);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<BoardResponse> detail(@PathVariable("id")Long id){
+        BoardResponse board = boardService.findBoardById(id);
+        System.out.println("id : "+id);
+        return ResponseEntity.ok(board);
     }
 }

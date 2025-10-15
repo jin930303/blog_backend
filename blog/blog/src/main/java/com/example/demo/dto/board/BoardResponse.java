@@ -19,15 +19,21 @@ public record BoardResponse(
         int views,
         String category
 ) {
+    private static final String SERVER_BASE_URL = "http://192.168.0.9:8080";
+
     public static BoardResponse fromEntity(BoardEntity entity){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
-
+        String webFilePath = null;
+        if(entity.getFilepath() !=null && !entity.getFilepath().isEmpty()) {
+            String fileName = entity.getFilepath().substring(entity.getFilepath().lastIndexOf("\\") + 1);
+            webFilePath = SERVER_BASE_URL+"/upload/" + fileName;
+        }
         return  new BoardResponse(
                 entity.getBoardId(),
                 entity.getTitle(),
                 entity.getContent(),
                 entity.getNickname(),
-                entity.getFilepath(),
+                webFilePath,
                 entity.getFileOriginalName(),
                 entity.getFileSize(),
                 entity.getInputDate() !=null ? entity.getInputDate().format(formatter) : String.valueOf(LocalDateTime.now()),
