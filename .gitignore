@@ -1,41 +1,68 @@
-/blog/blog/build/resources/main/application.properties
-/.idea/Backend.iml
-/blog/blog/build/classes/java/main/com/example/demo/BlogApplication.class
-/blog/blog/build/classes/java/test/com/example/demo/BlogApplicationTests.class
-/blog/blog/build/classes/java/main/com/example/demo/controller/board/BoardController.class
-/blog/blog/build/classes/java/main/com/example/demo/dto/board/BoardDTO.class
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardEntity$BoardEntityBuilder.class.uniqueId4
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardEntity.class.uniqueId2
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardRepository.class.uniqueId0
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardResponse.class.uniqueId6
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardRestController.class.uniqueId3
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardService.class.uniqueId1
-/blog/blog/build/tmp/compileJava/compileTransaction/stash-dir/BoardServiceImpl.class.uniqueId5
-/blog/blog/.gradle/buildOutputCleanup/buildOutputCleanup.lock
-/blog/blog/.gradle/buildOutputCleanup/cache.properties
-/blog/blog/.gradle/8.14.3/checksums/checksums.lock
-/blog/blog/.gradle/8.14.3/executionHistory/executionHistory.bin
-/blog/blog/.gradle/8.14.3/executionHistory/executionHistory.lock
-/blog/blog/.gradle/file-system.probe
-/blog/blog/.gradle/8.14.3/fileHashes/fileHashes.bin
-/blog/blog/.gradle/8.14.3/fileHashes/fileHashes.lock
-/blog/blog/.gradle/8.14.3/gc.properties
-/blog/blog/build/reports/problems/problems-report.html
-/blog/blog/build/classes/java/main/com/example/demo/config/SecurityConfig.class
-/blog/.idea/vcs.xml
-/blog/blog/build/classes/java/main/com/example/demo/config/WebConfig.class
-/blog/.idea/workspace.xml
-/blog/blog/.gradle/vcs-1/gc.properties
-/blog/blog/build/classes/java/main/com/example/demo/controller/board/BoardRestController.class
-/blog/blog/build/classes/java/main/com/example/demo/repository/board/BoardRepository.class
-/blog/blog/build/classes/java/main/com/example/demo/entity/board/BoardEntity.class
-/blog/blog/build/classes/java/main/com/example/demo/service/board/BoardService.class
-/blog/blog/build/classes/java/main/com/example/demo/service/board/BoardServiceImpl.class
-/blog/blog/.gradle/8.14.3/fileChanges/last-build.bin
-/blog/blog/build/classes/java/main/com/example/demo/controller/MainController.class
-/blog/blog/.gradle/8.14.3/checksums/md5-checksums.bin
-/blog/blog/.gradle/buildOutputCleanup/outputFiles.bin
-/blog/blog/build/tmp/compileJava/previous-compilation-data.bin
-/blog/blog/.gradle/8.14.3/fileHashes/resourceHashesCache.bin
-/blog/blog/.gradle/8.14.3/checksums/sha1-checksums.bin
-/blog/blog/build/classes/java/main/com/example/demo/entity/board/BoardEntity$BoardEntityBuilder.class
+# ------------------------------------------------------------
+# IntelliJ IDEA
+# ------------------------------------------------------------
+.idea/
+*.iml
+*.iws
+*.ipr
+/out/
+/target/
+# IntelliJ local history (if using Windows)
+/system/
+
+# ------------------------------------------------------------
+# Gradle
+# ------------------------------------------------------------
+# Gradle wrapper files
+!gradle/wrapper/gradle-wrapper.jar
+
+# Build/temp directories
+/build/
+.gradle/
+/out/
+/target/
+/classes/
+/libs/
+/tmp/
+
+# ------------------------------------------------------------
+# Java/JVM files
+# ------------------------------------------------------------
+# Compiled classes
+*.class
+
+# Log files
+*.log
+
+# Backup files
+*~
+# Virtual Machine error logs
+hs_err_pid*
+
+# ------------------------------------------------------------
+# 기타
+# ------------------------------------------------------------
+# Windows/macOS generated files
+[Tt]humbs.db
+.DS_Store
+
+# ------------------------------------------------------------
+# 불필요한 추가 파일
+# ------------------------------------------------------------
+
+# 압축 파일 (백업용 파일)
+*.zip
+*.rar
+*.tar
+*.gz
+
+# 임시 및 메모 파일
+*.txt
+*.log
+
+# ------------------------------------------------------------
+# Front-end 관련 (만약 Back-end 프로젝트 내부에 있다면)
+# ------------------------------------------------------------
+# React/Node.js 프로젝트의 경우
+/Blog_Frontend/node_modules/
+/Blog_Frontend/build/
