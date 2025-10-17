@@ -28,7 +28,7 @@ public class BoardEntity {
     private String nickname;
 
     @Column(name = "file_path")
-    private String filepath;
+    private String filePath;
 
     @Column(name = "file_original_name")
     private String fileOriginalName;

@@ -12,4 +12,6 @@ public interface BoardService {
     List<BoardResponse> findAllBoards();
 
     BoardResponse findBoardById(Long id);
+
+    String markdownHtml(String markdownText);
 }

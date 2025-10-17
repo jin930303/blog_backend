@@ -4,11 +4,19 @@ import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.repository.board.BoardRepository;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.parser.Parser;
+
+
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -18,17 +26,26 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepository;
 
-    public BoardServiceImpl(BoardRepository boardRepository) {
-        this.boardRepository = boardRepository;
-    }
+    private static final MutableDataSet OPTIONS = new MutableDataSet();
+    private static final Parser MARKDOWN_PARSER = Parser.builder(OPTIONS).build();
+    private static final HtmlRenderer HTML_RENDERER = HtmlRenderer.builder(OPTIONS).build();
 
     @Value("${upload.file.path}")
     private String uploadDir;
+
+    private String markdownToHtml(String markdown){
+        if(markdown == null || markdown.isEmpty()){
+            return "";
+        }
+
+        return HTML_RENDERER.render(MARKDOWN_PARSER.parse(markdown));
+    }
 
     @Override
     @Transactional
@@ -38,6 +55,7 @@ public class BoardServiceImpl implements BoardService {
         String finalFilePathToSave = null;
         String originalFileName = null;
         Long fileSize =0L;
+
         if(mulFile !=null && !mulFile.isEmpty()) {
             try {
                 String uuid = UUID.randomUUID().toString();
@@ -59,17 +77,18 @@ public class BoardServiceImpl implements BoardService {
             }
 
         }
+        String htmlContent = markdownToHtml(boardDTO.getContent());
 
         BoardEntity entity = BoardEntity.builder()
                 .title(boardDTO.getTitle())
-                .content(boardDTO.getContent())
+                .content(htmlContent)
                 .nickname(boardDTO.getNickname())
                 .category(boardDTO.getCategory())
                 .inputDate(LocalDateTime.now())
                 .modifiedDate(LocalDateTime.now())
                 .fileOriginalName(originalFileName)
                 .fileSize(fileSize)
-                .filepath(finalFilePathToSave)
+                .filePath(finalFilePathToSave)
                 .views(0)
                 .likes(0)
                 .build();
@@ -89,7 +108,17 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardResponse findBoardById(Long id) {
         BoardEntity board = boardRepository.findById(id).orElseThrow(()->new EntityNotFoundException("게시판 아이디를 찾을 수 없습니다."+id));
-        return BoardResponse.fromEntity(board);
+
+
+        return BoardResponse.fromEntity(board,board.getContent());
+    }
+
+    @Override
+    public String markdownHtml(String markdownText) {
+        if(markdownText == null || markdownText.isEmpty()){
+            return "";
+        }
+        return HTML_RENDERER.render(MARKDOWN_PARSER.parse(markdownText));
     }
 
 

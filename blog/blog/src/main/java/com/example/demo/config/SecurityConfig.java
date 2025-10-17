@@ -19,16 +19,17 @@ import java.util.Collections;
 @EnableWebSecurity
 public class SecurityConfig {
     // ⭐ 1. CorsConfigurationSource Bean 정의: CORS 설정을 Security Filter에 명시적으로 주입합니다.
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // WebConfig.java와 동일하게 React 앱의 출처와 허용할 메서드를 정의합니다.
-        // WebConfig.java에서 설정했더라도 Security 설정에 명시적으로 필요합니다.
+        // 임시 ip 등록
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "http://172.30.1.9:5500", // CORS 에러 발생 Origin (Live Server 주소)
-                "http://localhost:5500"
+                "http://172.30.1.9:5500",
+                "http://localhost:5500",
+                "http://192.168.0.8:5500"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -41,7 +42,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(0)
+    @Order(0)// 우선순위를 높이는
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // CORS 설정을 커스터마이징된 corsConfigurationSource Bean으로 적용
@@ -49,6 +50,7 @@ public class SecurityConfig {
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/**").permitAll() // /api/v1/로 시작하는 모든 요청 허용
+                        .requestMatchers("/upload/**").permitAll()
                         // Swagger UI 및 정적 파일 경로도 허용 (필요할 경우)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/").permitAll()
                         .requestMatchers("/board.html").permitAll()

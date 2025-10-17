@@ -15,9 +15,6 @@ public class BoardDTO {
         private String nickname;
         private MultipartFile img;
         private String category;
-
-
-
     }
 
 

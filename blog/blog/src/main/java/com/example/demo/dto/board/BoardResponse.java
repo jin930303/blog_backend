@@ -2,6 +2,7 @@ package com.example.demo.dto.board;
 
 import com.example.demo.entity.board.BoardEntity;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -19,19 +20,34 @@ public record BoardResponse(
         int views,
         String category
 ) {
-    private static final String SERVER_BASE_URL = "http://192.168.0.9:8080";
+    private static final String SERVER_BASE_URL = "http://localhost:8000";
 
-    public static BoardResponse fromEntity(BoardEntity entity){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
+
+    // =========================================================================
+    // 💡 1. 오버로딩 메서드 추가 (List.stream().map()에서 사용)
+    // =========================================================================
+    public static BoardResponse fromEntity(BoardEntity entity) {
+        // 목록 조회 시 엔티티의 Content를 그대로 사용하도록 합니다.
+        // 상세 조회 시에만 contentOverride를 사용하므로, 이 경우 null을 전달하여 엔티티의 내용을 사용하도록 위임합니다.
+        // 또는 contentOverride를 'Optional'로 만들어서 처리할 수 있지만, 여기서는 단순하게 entity.getContent()를 전달합니다.
+        return fromEntity(entity, entity.getContent());
+    }
+
+    public static BoardResponse fromEntity(BoardEntity entity,String contentOverride){
         String webFilePath = null;
-        if(entity.getFilepath() !=null && !entity.getFilepath().isEmpty()) {
-            String fileName = entity.getFilepath().substring(entity.getFilepath().lastIndexOf("\\") + 1);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
+
+        if(entity.getFilePath() !=null && !entity.getFilePath().isEmpty()) {
+            String fileName = entity.getFilePath().substring(entity.getFilePath().lastIndexOf("\\") + 1);
             webFilePath = SERVER_BASE_URL+"/upload/" + fileName;
         }
         return  new BoardResponse(
                 entity.getBoardId(),
                 entity.getTitle(),
-                entity.getContent(),
+                contentOverride,
                 entity.getNickname(),
                 webFilePath,
                 entity.getFileOriginalName(),
