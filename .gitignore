@@ -39,3 +39,19 @@
 /blog/blog/.gradle/8.14.3/fileHashes/resourceHashesCache.bin
 /blog/blog/.gradle/8.14.3/checksums/sha1-checksums.bin
 /blog/blog/build/classes/java/main/com/example/demo/entity/board/BoardEntity$BoardEntityBuilder.class
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+build/
+out/
+
+# OS 관련
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.gradle/
+build/
