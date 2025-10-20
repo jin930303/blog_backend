@@ -6,8 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
+    Optional<MemberEntity> findByUsername(String username);
+
     @Query(value = "SELECT COUNT(username) FROM member WHERE username = :username", nativeQuery = true)
     int countByUsername(@Param("username") String username);
 

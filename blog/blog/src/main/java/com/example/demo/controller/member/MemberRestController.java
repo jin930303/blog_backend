@@ -1,10 +1,15 @@
 package com.example.demo.controller.member;
 
+import com.example.demo.dto.member.LoginRequestDTO;
 import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.service.member.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +21,35 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class MemberRestController {
-    @Autowired
-    MemberService memberService;
+
+    private final MemberService memberService;
+
+    private final AuthenticationManager authenticationManager;
+
+    public MemberRestController(MemberService memberService, AuthenticationManager authenticationManager) {
+        this.memberService = memberService;
+        this.authenticationManager = authenticationManager;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequestDTO loginRequest) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Map<String, String> responseBody = new HashMap<>();
+
+        responseBody.put("username", loginRequest.getUsername());
+        responseBody.put("message", "로그인 성공");
+
+        return ResponseEntity.ok(responseBody);
+    }
 
     @PostMapping("/member")
     public ResponseEntity<Map<String, String>> signup(@RequestBody MemberDTO dto) {
