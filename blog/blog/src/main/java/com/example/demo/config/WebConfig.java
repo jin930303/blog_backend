@@ -27,15 +27,20 @@ public class WebConfig implements WebMvcConfigurer {
 
 
 
-    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry){
         Path uploadPath = Paths.get(ACTUAL_UPLOAD_ROOT).toAbsolutePath().normalize();
-        String fileLocation = "file:" + uploadPath.toString().replace('\\', '/') + "/"; // file:/C:/upload/
 
-        registry.addResourceHandler("/upload/**")
+        // 파일 시스템 URL 형식으로 변환 (예: file:/C:/upload/images/)
+        // 끝에 '/'를 추가해야 디렉토리를 가리킬 수 있습니다.
+        String fileLocation = "file:" + uploadPath.toString().replace('\\', '/') + "/";
+
+        // 🚩 수정: 클라이언트의 요청 URL 경로를 /images/** 로 변경했습니다.
+        // 클라이언트가 http://localhost:8000/images/0fd59b2c... 요청 시 이 핸들러가 처리합니다.
+        registry.addResourceHandler("/images/**")
                 .addResourceLocations(fileLocation)
                 .setCachePeriod(0);
-        System.out.println("✅ File Resource Handler configured: URL path [/upload/**] -> " + fileLocation);
+
+        System.out.println("✅ File Resource Handler configured: URL path [/images/**] -> " + fileLocation);
     }
 
 }

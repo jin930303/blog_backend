@@ -30,6 +30,7 @@ public class SecurityConfig {
                 "http://172.30.1.9:5500",
                 "http://localhost:5500",
                 "http://192.168.0.8:5500",
+                "http://192.168.0.28:5500",
                 "http://127.0.0.1:5500"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -50,11 +51,18 @@ public class SecurityConfig {
                 .cors(cors ->cors.configurationSource(corsConfigurationSource()))
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/**").permitAll() // /api/v1/로 시작하는 모든 요청 허용
+                        .requestMatchers("/api/v1/boards").permitAll()
+                        .requestMatchers("/api/v1/**").permitAll()
+                        // /api/v1/로 시작하는 모든 요청 허용
+                        .requestMatchers("/images/**").permitAll()
+
+
                         .requestMatchers("/upload/**").permitAll()
+                        .requestMatchers("/upload/images/**").permitAll()
                         // Swagger UI 및 정적 파일 경로도 허용 (필요할 경우)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/").permitAll()
                         .requestMatchers("/board.html").permitAll()
+                        .requestMatchers("/upload/images/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )
 
