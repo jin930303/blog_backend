@@ -39,4 +39,9 @@ public class MemberServiceImpl implements MemberService{
     public boolean checkNickname(String nickname) {
         return memberRepository.countByNickname(nickname) > 0;
     }
+
+    @Override
+    public String getNicknameByUsername(String username) {
+        return memberRepository.findNicknameByUsername(username).orElse("사용자");
+    }
 }

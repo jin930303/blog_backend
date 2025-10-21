@@ -24,7 +24,7 @@ public class CustomUserService implements UserDetailsService {
 
         String role = memberEntity.getRole();
         if(role == null){
-            role = "USER";
+            role = "role_user"; // USER -> role_user
         }
 
         return User.builder()
