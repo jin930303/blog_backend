@@ -9,11 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 @NoArgsConstructor
 public class BoardDTO {
-
+        private Long boardId;
         private String title;
         private String content;
         private String nickname;
-        private MultipartFile img;
         private String category;
     }
 
