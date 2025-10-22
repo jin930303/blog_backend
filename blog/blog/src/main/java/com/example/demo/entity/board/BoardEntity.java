@@ -20,6 +20,7 @@ public class BoardEntity {
     @GeneratedValue(generator = "board_seq",strategy = GenerationType.SEQUENCE)
     private Long boardId;
 
+    @Column(nullable = false)
     private String title;
 
     @Lob
@@ -46,5 +47,23 @@ public class BoardEntity {
     private int views;
     private String category;
 
+    public void update(
+            String title,
+            String nickname,
+            String content,
+            String category,
+            String fileOriginalName,
+            Long fileSize,
+            String filePath
+    ){
+        this.title = title;
+        this.nickname = nickname;
+        this.content=content;
+        this.category=category;
+        this.modifiedDate=LocalDateTime.now();
 
+        this.fileOriginalName = fileOriginalName;
+        this.fileSize=fileSize;
+        this.filePath=filePath;
+    }
 }
