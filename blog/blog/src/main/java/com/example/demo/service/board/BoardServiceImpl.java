@@ -1,6 +1,7 @@
 package com.example.demo.service.board;
 
 import com.example.demo.dto.board.BoardDTO;
+import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.repository.board.BoardRepository;
@@ -191,6 +192,42 @@ public class BoardServiceImpl implements BoardService {
         }
         boardRepository.deleteById(boardId);
         log.info("게시글 ID 삭제 완료 {}",boardId);
+    }
+
+    @Override
+    @Transactional
+    public void increaseView(Long boardId) {
+        boardRepository.increaseView(boardId);
+    }
+
+    @Override
+    public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate) {
+        List<BoardEntity> boards = boardRepository.findNextBoards(size + 1, cursorId, cursorDate);
+
+        boolean hasNext = boards.size() > size;
+
+        List<BoardEntity> contentEntities = hasNext ? boards.subList(0, size) : boards;
+
+        List<BoardResponse> contentDtos = contentEntities.stream()
+                .map(BoardResponse :: fromEntity)
+                .collect(Collectors.toList());
+
+        Long nextCursorId = null;
+        LocalDateTime nextCursorDate = null;
+
+        if(hasNext){
+
+            BoardEntity lastBoard = contentEntities.get(contentEntities.size() - 1);
+            nextCursorId = lastBoard.getBoardId();
+            nextCursorDate = lastBoard.getInputDate();
+        }
+
+        return new BoardListResponse(
+                contentDtos,
+                hasNext,
+                nextCursorId,
+                nextCursorDate
+        );
     }
 
     @Override
