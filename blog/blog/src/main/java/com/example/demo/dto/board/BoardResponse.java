@@ -2,7 +2,6 @@ package com.example.demo.dto.board;
 
 import com.example.demo.entity.board.BoardEntity;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -14,15 +13,13 @@ public record BoardResponse(
         String filePath,
         String fileOriginalName,
         Long fileSize,
-        String inputDate,
-        String modifiedDate,
+        LocalDateTime inputDate,
+        LocalDateTime modifiedDate,
         int likes,
         int views,
         String category
 ) {
     private static final String SERVER_BASE_URL = "http://localhost:8000";
-
-
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
 
     // =========================================================================
@@ -52,8 +49,8 @@ public record BoardResponse(
                 webFilePath,
                 entity.getFileOriginalName(),
                 entity.getFileSize(),
-                entity.getInputDate() !=null ? entity.getInputDate().format(formatter) : String.valueOf(LocalDateTime.now()),
-                entity.getModifiedDate() !=null ? entity.getModifiedDate().format(formatter) : String.valueOf(LocalDateTime.now()),
+                entity.getInputDate() !=null ? entity.getInputDate() : LocalDateTime.now(),
+                entity.getModifiedDate() !=null ? entity.getInputDate() : LocalDateTime.now(),
                 entity.getLikes(),
                 entity.getViews(),
                 entity.getCategory()

@@ -1,10 +1,12 @@
 package com.example.demo.service.board;
 
 import com.example.demo.dto.board.BoardDTO;
+import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BoardService {
@@ -21,4 +23,8 @@ public interface BoardService {
     void updateBoard(BoardDTO boardDTO);
 
     void deleteBoard(Long boardId);
+
+    void increaseView(Long boardId);
+
+    BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate);
 }
