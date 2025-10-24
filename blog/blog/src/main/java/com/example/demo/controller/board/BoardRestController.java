@@ -3,21 +3,17 @@ package com.example.demo.controller.board;
 import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
-import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.service.board.BoardService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.aspectj.lang.annotation.DeclareError;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Log4j2
 @RestController
@@ -65,6 +61,8 @@ public class BoardRestController {
     public ResponseEntity<BoardResponse> detail(@PathVariable("boardId")Long boardId){
         BoardResponse board = boardService.findBoardById(boardId);
         boardService.increaseView(boardId);
+        log.info("boardId = {}",boardId);
+        log.info("content = {}",board.content());
         System.out.println("boardId : "+boardId);
         return ResponseEntity.ok(board);
     }
@@ -93,9 +91,10 @@ public class BoardRestController {
     }
 
     @GetMapping("/cursor")
-    public ResponseEntity<BoardListResponse> getBoardsByCursor(@RequestParam(defaultValue = "10") int size,
-                                                               @RequestParam(required = false)Long cursorId,
-                                                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate)
+    public ResponseEntity<BoardListResponse> getBoardsByCursor(
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false,value = "cursorId")Long cursorId,
+            @RequestParam(required = false,value = "CursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate)
     {
         BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate);
         return  ResponseEntity.ok(response);

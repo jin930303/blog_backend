@@ -10,7 +10,6 @@ import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
 
-import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -86,6 +85,14 @@ public class BoardServiceImpl implements BoardService {
 
         String htmlContent = markdownToHtml(boardDTO.getContent());
 
+        String textForSummary = htmlContent;
+        final int SUMMARY_LENGTH = 200;
+        String contentSummary = textForSummary;
+
+        if(textForSummary != null && textForSummary.length() > SUMMARY_LENGTH){
+            contentSummary = textForSummary.substring(0,SUMMARY_LENGTH);
+        }
+
         BoardEntity entity = BoardEntity.builder()
                 .title(boardDTO.getTitle())
                 .content(htmlContent)
@@ -98,6 +105,7 @@ public class BoardServiceImpl implements BoardService {
                 .filePath(finalFilePathToSave)
                 .views(0)
                 .likes(0)
+                .contentSummary(contentSummary)
                 .build();
         BoardEntity saveEntity = boardRepository.save(entity);
         return saveEntity.getBoardId();
@@ -128,6 +136,15 @@ public class BoardServiceImpl implements BoardService {
 
         String newHtmlContent = markdownToHtml(boardDTO.getContent());
 
+        String textForSummary = newHtmlContent;
+        final int SUMMARY_LENGTH = 200;
+        String contentSummary = textForSummary;
+
+        if(textForSummary !=null && textForSummary.length() > SUMMARY_LENGTH){
+            contentSummary = textForSummary.substring(0,SUMMARY_LENGTH);
+        }
+
+
         Set<String> oldImageUrls = extractImageUrls(oldContent);
         Set<String> newImageUrls = extractImageUrls(newHtmlContent);
 
@@ -154,7 +171,10 @@ public class BoardServiceImpl implements BoardService {
                 boardDTO.getCategory(),
                 originalFileName,
                 fileSize,
-                finalFilePathToSave
+                finalFilePathToSave,
+                contentSummary
+
+
         );
     }
 
@@ -201,38 +221,55 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate) {
-        List<BoardEntity> boards = boardRepository.findNextBoards(size + 1, cursorId, cursorDate);
 
+        // 1. 요청된 크기보다 하나 더 가져와서 다음 페이지 존재 여부 확인 (size + 1)
+        int pageSize = size + 1;
+
+        // ⭐ 1. Repository는 BoardEntity 목록을 반환해야 합니다. (Service에서 DTO 변환)
+        // boards는 size + 1개의 Entity를 포함합니다.
+        List<BoardEntity> boards = boardRepository.findNextBoards(cursorId, cursorDate,pageSize);
+
+        // 2. 다음 페이지 존재 여부 판단
         boolean hasNext = boards.size() > size;
 
+        // 3. 실제 표시할 게시글 목록 (요청된 크기까지만)
+        // boards는 size + 1개이므로, subList(0, size)를 통해 size개만 contentEntities에 담깁니다.
         List<BoardEntity> contentEntities = hasNext ? boards.subList(0, size) : boards;
 
+        // 4. Entity를 DTO로 변환
         List<BoardResponse> contentDtos = contentEntities.stream()
-                .map(BoardResponse :: fromEntity)
+                .map(BoardResponse::fromEntity)
                 .collect(Collectors.toList());
 
+        // 5. 다음 커서 값 설정
         Long nextCursorId = null;
         LocalDateTime nextCursorDate = null;
 
-        if(hasNext){
+        if (hasNext) {
+            // ⭐ 2. 커서 추출 로직 수정:
+            // 커서는 Repository에서 가져온 전체 목록(boards) 중
+            // 현재 페이지에 표시되지 않은 다음 항목 (인덱스 size)에서 추출해야 합니다.
+            BoardEntity cursorEntity = boards.get(size);
 
-            BoardEntity lastBoard = contentEntities.get(contentEntities.size() - 1);
-            nextCursorId = lastBoard.getBoardId();
-            nextCursorDate = lastBoard.getInputDate();
+            nextCursorId = cursorEntity.getBoardId();
+            nextCursorDate = cursorEntity.getInputDate();
         }
 
+        // BoardListResponse DTO로 반환
         return new BoardListResponse(
                 contentDtos,
                 hasNext,
                 nextCursorId,
                 nextCursorDate
         );
+
     }
 
     @Override
     public List<BoardResponse> findAllBoards() {
-            List<BoardEntity> list = boardRepository.findAll();
+            List<BoardEntity> list = boardRepository.findAllWithMember();
 
         return list.stream()
                 .map(BoardResponse::fromEntity )
