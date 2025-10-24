@@ -1,6 +1,7 @@
 package com.example.demo.controller.board;
 
 import com.example.demo.dto.board.BoardDTO;
+import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.service.board.BoardService;
@@ -8,12 +9,14 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.aspectj.lang.annotation.DeclareError;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Log4j2
@@ -53,14 +56,15 @@ public class BoardRestController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<BoardResponse>> getBoardList(){
-        List<BoardResponse> list = boardService.findAllBoards();
-        return ResponseEntity.ok(list);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<BoardResponse>> getBoardList(){
+//        List<BoardResponse> list = boardService.findAllBoards();
+//        return ResponseEntity.ok(list);
+//    }
     @GetMapping("/{boardId}")
     public ResponseEntity<BoardResponse> detail(@PathVariable("boardId")Long boardId){
         BoardResponse board = boardService.findBoardById(boardId);
+        boardService.increaseView(boardId);
         System.out.println("boardId : "+boardId);
         return ResponseEntity.ok(board);
     }
@@ -86,5 +90,14 @@ public class BoardRestController {
     public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId){
         boardService.deleteBoard(boardId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/cursor")
+    public ResponseEntity<BoardListResponse> getBoardsByCursor(@RequestParam(defaultValue = "10") int size,
+                                                               @RequestParam(required = false)Long cursorId,
+                                                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate)
+    {
+        BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate);
+        return  ResponseEntity.ok(response);
     }
 }
