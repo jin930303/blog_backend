@@ -3,7 +3,6 @@ package com.example.demo.service.board;
 import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
-import com.example.demo.entity.board.BoardEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;

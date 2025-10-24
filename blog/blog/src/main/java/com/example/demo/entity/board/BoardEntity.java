@@ -1,8 +1,10 @@
 package com.example.demo.entity.board;
 
+import com.example.demo.entity.member.MemberEntity;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 
@@ -47,6 +49,12 @@ public class BoardEntity {
     private int views;
     private String category;
 
+    @Column(name = "content_summary")
+    private String contentSummary;
+
+
+
+
     public void update(
             String title,
             String nickname,
@@ -54,7 +62,9 @@ public class BoardEntity {
             String category,
             String fileOriginalName,
             Long fileSize,
-            String filePath
+            String filePath,
+            String contentSummary
+
     ){
         this.title = title;
         this.nickname = nickname;
@@ -65,5 +75,7 @@ public class BoardEntity {
         this.fileOriginalName = fileOriginalName;
         this.fileSize=fileSize;
         this.filePath=filePath;
+        this.contentSummary = contentSummary;
+
     }
 }
