@@ -25,6 +25,7 @@ public class SecurityConfig {
     // ⭐ 1. CorsConfigurationSource Bean 정의: CORS 설정을 Security Filter에 명시적으로 주입합니다.
 
     @Bean
+    @Order(0)
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
@@ -49,18 +50,24 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(0)// 우선순위를 높이는
+    @Order(1)// 우선순위를 높이는
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // CORS 설정을 커스터마이징된 corsConfigurationSource Bean으로 적용
                 .cors(cors ->cors.configurationSource(corsConfigurationSource()))
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/boards").permitAll()
-                        .requestMatchers("/api/v1/**").permitAll()
-                        // /api/v1/로 시작하는 모든 요청 허용
-                        .requestMatchers("/images/**").permitAll()
+                        // 카카오 로그인 추가하기
+                        // 1. 카카오 Redirect URI (가장 중요한 부분)
+                        .requestMatchers("/login/oauth2/code/kakao").permitAll()
+                        // 2. 카카오 인증 시작 URL 요청 엔드포인트
+                        .requestMatchers("/api/v1/oauth/kakao/url").permitAll()
 
+
+                        .requestMatchers("/api/v1/boards").permitAll()
+                        // /api/v1/로 시작하는 모든 요청 허용
+                        .requestMatchers("/api/v1/**").permitAll()
+                        .requestMatchers("/images/**").permitAll()
 
                         .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/upload/images/**").permitAll()
@@ -68,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/").permitAll()
                         .requestMatchers("/board.html").permitAll()
                         .requestMatchers("/upload/images/**").permitAll()
+
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )
 

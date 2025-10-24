@@ -1,5 +1,6 @@
 package com.example.demo.service.member;
 
+import com.example.demo.dto.member.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 
 public interface MemberService {
@@ -10,4 +11,6 @@ public interface MemberService {
     boolean checkNickname(String nickname);
 
     String getNicknameByUsername(String username);
+
+    String socialLoginOrSignupAndGetJwt(KakaoUserInfoDTO userInfo);
 }
