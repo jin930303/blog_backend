@@ -2,7 +2,6 @@ package com.example.demo.service.member;
 
 import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.member.MemberRepository;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,10 +26,11 @@ public class CustomUserService implements UserDetailsService {
             role = "role_user"; // USER -> role_user
         }
 
-        return User.builder()
-                .username(memberEntity.getUsername())
-                .password(memberEntity.getPassword())
-                .roles(role)
-                .build();
+        return new CustomUserDetails(memberEntity);
+//        return User.builder()
+//                .username(memberEntity.getUsername())
+//                .password(memberEntity.getPassword())
+//                .roles(role)
+//                .build();
     }
 }
