@@ -1,5 +1,6 @@
 package com.example.demo.config;
 
+import com.example.demo.service.member.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -12,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,7 +54,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)// 우선순위를 높이는
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,  JwtAuthenticationFilter jwtFilter) throws Exception {
         http
                 // CORS 설정을 커스터마이징된 corsConfigurationSource Bean으로 적용
                 .cors(cors ->cors.configurationSource(corsConfigurationSource()))
@@ -87,6 +89,7 @@ public class SecurityConfig {
                 // 4. **HTTP Basic 인증 비활성화**: 팝업 창이 뜨는 것을 확실히 방지
                 .httpBasic(AbstractHttpConfigurer::disable)
 
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 // 5. **세션 관리 설정 추가**: REST API 서버는 세션을 사용하지 않으므로 Stateless 설정
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
