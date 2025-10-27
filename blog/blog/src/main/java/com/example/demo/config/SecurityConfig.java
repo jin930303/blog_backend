@@ -61,19 +61,16 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/code/kakao").permitAll()
                         // 2. 카카오 인증 시작 URL 요청 엔드포인트
                         .requestMatchers("/api/v1/oauth/kakao/url").permitAll()
-
-
-                        .requestMatchers("/api/v1/boards").permitAll()
-                        // /api/v1/로 시작하는 모든 요청 허용
-                        .requestMatchers("/api/v1/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
-
                         .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/upload/images/**").permitAll()
                         // Swagger UI 및 정적 파일 경로도 허용 (필요할 경우)
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/").permitAll()
                         .requestMatchers("/board.html").permitAll()
                         .requestMatchers("/upload/images/**").permitAll()
+                        .requestMatchers("/api/v1/boards").permitAll()
+                        // /api/v1/로 시작하는 모든 요청 허용
+                        .requestMatchers("/api/v1/**").permitAll()
 
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )

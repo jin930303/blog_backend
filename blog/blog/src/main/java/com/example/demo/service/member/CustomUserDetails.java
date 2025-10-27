@@ -18,6 +18,7 @@ public class CustomUserDetails extends User {
     public CustomUserDetails(MemberEntity memberEntity, Collection<? extends GrantedAuthority> authorities) {
         super(memberEntity.getUsername(), memberEntity.getPassword(), authorities);
         this.memberId = memberEntity.getMemberId();
+        System.out.println("CustomUserDetails 생성됨 - memberId: " + this.memberId);
     }
 
     public CustomUserDetails(MemberEntity memberEntity) {

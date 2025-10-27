@@ -23,14 +23,10 @@ public class CustomUserService implements UserDetailsService {
 
         String role = memberEntity.getRole();
         if(role == null){
-            role = "role_user"; // USER -> role_user
+            role = "role_user";
         }
+        System.out.println("조회된 memberId: " + memberEntity.getMemberId());
 
         return new CustomUserDetails(memberEntity);
-//        return User.builder()
-//                .username(memberEntity.getUsername())
-//                .password(memberEntity.getPassword())
-//                .roles(role)
-//                .build();
     }
 }

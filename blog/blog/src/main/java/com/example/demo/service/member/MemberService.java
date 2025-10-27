@@ -1,6 +1,6 @@
 package com.example.demo.service.member;
 
-import com.example.demo.dto.member.KakaoUserInfoDTO;
+import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 
 public interface MemberService {
