@@ -1,4 +1,4 @@
-package com.example.demo.dto.member;
+package com.example.demo.dto.member.kakao;
 
 import lombok.*;
 

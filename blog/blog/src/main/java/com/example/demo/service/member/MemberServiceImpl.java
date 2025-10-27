@@ -1,6 +1,6 @@
 package com.example.demo.service.member;
 
-import com.example.demo.dto.member.KakaoUserInfoDTO;
+import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.member.MemberRepository;

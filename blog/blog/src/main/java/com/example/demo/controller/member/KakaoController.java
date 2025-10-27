@@ -1,6 +1,6 @@
 package com.example.demo.controller.member;
 
-import com.example.demo.dto.member.KakaoUserInfoDTO;
+import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.service.member.KakaoOAuthService;
 import com.example.demo.service.member.MemberService;
 import org.springframework.http.HttpHeaders;

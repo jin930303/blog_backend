@@ -1,7 +1,7 @@
 package com.example.demo.service.member;
 
-import com.example.demo.dto.member.KakaoOAuthProperties;
-import com.example.demo.dto.member.KakaoUserInfoDTO;
+import com.example.demo.dto.member.kakao.KakaoOAuthProperties;
+import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
