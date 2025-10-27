@@ -6,6 +6,7 @@ import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.service.file.FileService;
+import com.example.demo.service.member.CustomUserDetails;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
@@ -14,6 +15,7 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -77,7 +80,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public Long saveNewBoard(BoardDTO boardDTO) {
+    public Long saveNewBoard(BoardDTO boardDTO, Long currentMemberId) {
 
         final String finalFilePathToSave = null;
         final String originalFileName = null;
@@ -123,7 +126,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public void updateBoard(BoardDTO boardDTO) {
+    public void updateBoard(BoardDTO boardDTO,Long currentMemberId) throws AccessDeniedException {
 
         final String finalFilePathToSave = null;
         final String originalFileName = null;
@@ -131,6 +134,15 @@ public class BoardServiceImpl implements BoardService {
 
         BoardEntity board = boardRepository.findById(boardDTO.getBoardId())
                 .orElseThrow(()-> new EntityNotFoundException("게시글을 찾을 수 없습니다. id :"+boardDTO.getBoardId()));
+
+
+        Long authorId =board.getMember().getMemberId();
+
+        if(currentMemberId == null || !currentMemberId.equals(authorId)){
+            log.warn("수정 : 게시글 작성자와 아이디가 일치 하지 않습니다. 요청 {}, 작성자 {}",currentMemberId,authorId);
+            throw new AccessDeniedException("수정 권한이 없습니다. 게시글 작성자만 수정할 수 있습니다.");
+        }
+
 
         String oldContent = board.getContent();
 
@@ -180,8 +192,16 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public void deleteBoard(Long boardId) {
+    public void deleteBoard(Long boardId, Long currentMemberId) throws AccessDeniedException {
         BoardEntity entity = boardRepository.findById(boardId).orElseThrow(()->new EntityNotFoundException("게시글 ID를 찾을 수 없습니다."));
+
+        Long authorId = entity.getMember().getMemberId();
+
+        if(currentMemberId == null || !currentMemberId.equals(authorId)){
+            log.warn("삭제 : 게시글 작성자와 아이디가 일치 하지 않습니다. 요청 {}, 작성자 {}",currentMemberId,authorId);
+            throw new AccessDeniedException("본인 게시글만 삭제 가능합니다.");
+        }
+
         if(entity.getContent() !=null && !entity.getContent().isEmpty()){
 
             Set<String> imgUrls =  extractImageUrls(entity.getContent());
@@ -222,7 +242,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional(readOnly = true)
-    public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate) {
+    public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate,Long currentMemberId) {
 
         // 1. 요청된 크기보다 하나 더 가져와서 다음 페이지 존재 여부 확인 (size + 1)
         int pageSize = size + 1;
@@ -240,9 +260,12 @@ public class BoardServiceImpl implements BoardService {
 
         // 4. Entity를 DTO로 변환
         List<BoardResponse> contentDtos = contentEntities.stream()
-                .map(BoardResponse::fromEntity)
+                .map(entity -> {
+                            Long authorId = entity.getMember().getMemberId();
+                            boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+                            return BoardResponse.fromEntity(entity, entity.getContentSummary(), isAuthor);
+                        })
                 .collect(Collectors.toList());
-
         // 5. 다음 커서 값 설정
         Long nextCursorId = null;
         LocalDateTime nextCursorDate = null;
@@ -268,20 +291,27 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public List<BoardResponse> findAllBoards() {
+    public List<BoardResponse> findAllBoards(Long currentMemberId) {
             List<BoardEntity> list = boardRepository.findAllWithMember();
 
         return list.stream()
-                .map(BoardResponse::fromEntity )
+                .map(entity -> {
+                    Long authorId = entity.getMember().getMemberId();
+                    boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+                    return BoardResponse.fromEntity(entity,isAuthor);
+                } )
                 .collect(Collectors.toList());
     }
 
     @Override
-    public BoardResponse findBoardById(Long id) {
+    public BoardResponse findBoardById(Long id, Long currentMemberId) {
         BoardEntity board = boardRepository.findById(id).orElseThrow(()->new EntityNotFoundException("게시판 아이디를 찾을 수 없습니다."+id));
 
+        Long authorId = board.getMember().getMemberId();
 
-        return BoardResponse.fromEntity(board,board.getContent());
+        boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+
+        return BoardResponse.fromEntity(board,board.getContent(),isAuthor);
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Builder
 @Table(name = "board")
 @SequenceGenerator(name = "board_seq",sequenceName = "board_seq",initialValue = 1,allocationSize = 1)
@@ -52,8 +52,13 @@ public class BoardEntity {
     @Column(name = "content_summary")
     private String contentSummary;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id",nullable = false)
+    private MemberEntity member;
 
-
+    private Long getAuthorMemberId(){
+        return this.member != null ? this.member.getMemberId() : null;
+    }
 
     public void update(
             String title,

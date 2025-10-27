@@ -4,12 +4,16 @@ import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.service.board.BoardService;
+import com.example.demo.service.member.CustomUserDetails;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +32,10 @@ public class BoardRestController {
         private String markdownText;
     }
 
+    private Long getCurrentMemberId(@AuthenticationPrincipal CustomUserDetails details){
+
+        return details != null ? details.getMemberId() : null;
+    }
 
     @PostMapping(value = "/markdown-preview",produces = "text/html; charset=utf-8")
     public ResponseEntity<String> previewMarkdown(@RequestBody MarkdownPreviewRequest request){
@@ -46,20 +54,38 @@ public class BoardRestController {
         }
     }
     @PostMapping
-    public ResponseEntity<String> createBoard(@RequestBody BoardDTO boardDTO){
-        Long boardId = boardService.saveNewBoard(boardDTO);
-        log.info("게시글이 성공적으로 작성되었습니다. id : {}",boardId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Long> createBoard(@RequestBody BoardDTO boardDTO, @AuthenticationPrincipal CustomUserDetails details){
+
+        if(details == null){
+            log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        // details가 null이 아님을 확인했으므로, 안전하게 getMemberId()를 호출할 수 있습니다.
+        Long currentMemberId = details.getMemberId();
+
+        // 만약 memberId가 DB에 null로 저장된 특이 케이스까지 막고 싶다면 추가 검사
+        if (currentMemberId == null) {
+            log.warn("인증된 사용자이지만 MemberId가 누락되었습니다.");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try{
+            Long boardId = boardService.saveNewBoard(boardDTO, currentMemberId);
+            return new ResponseEntity<>(boardId,HttpStatus.CREATED);
+        }
+        catch(EntityNotFoundException e){
+            log.error("작성자 id : {} 를 찾을 수 없습니다.",currentMemberId);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
-//    @GetMapping
-//    public ResponseEntity<List<BoardResponse>> getBoardList(){
-//        List<BoardResponse> list = boardService.findAllBoards();
-//        return ResponseEntity.ok(list);
-//    }
     @GetMapping("/{boardId}")
-    public ResponseEntity<BoardResponse> detail(@PathVariable("boardId")Long boardId){
-        BoardResponse board = boardService.findBoardById(boardId);
+    public ResponseEntity<BoardResponse> detail(@PathVariable("boardId")Long boardId,@AuthenticationPrincipal CustomUserDetails details){
+
+        Long currentMemberId = details.getMemberId();
+
+        BoardResponse board = boardService.findBoardById(boardId,currentMemberId);
         boardService.increaseView(boardId);
         log.info("boardId = {}",boardId);
         log.info("content = {}",board.content());
@@ -68,25 +94,37 @@ public class BoardRestController {
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @RequestBody BoardDTO boardDTO){
+    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @RequestBody BoardDTO boardDTO,@AuthenticationPrincipal CustomUserDetails details){
+
+        Long currentMemberId = details.getMemberId();
+
+
         try{
             boardDTO.setBoardId(boardId);
-            boardService.updateBoard(boardDTO);
+            // Service 메서드 시그니처 변경에 맞춰 currentMemberId를 추가했습니다.
+            boardService.updateBoard(boardDTO, currentMemberId);
             return ResponseEntity.noContent().build();
         }
+        // AccessDeniedException은 서비스 계층에서 권한이 없는 경우 발생합니다.
+        catch (AccessDeniedException e) {
+            log.warn("게시글 수정 권한 없음 (403 Forbidden) : {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
         catch (IllegalArgumentException e){
-            log.info("게시글 수정 실패 (404) :{}", e.getMessage());
+            log.info("게시글 수정 실패 (404 Not Found) :{}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
         catch (Exception e){
-            log.info("게시글 수정 중 오류(500) :{}",e.getMessage());
+            log.error("게시글 수정 중 오류(500 Internal Server Error) :{}",e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @DeleteMapping("/{boardId}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId){
-        boardService.deleteBoard(boardId);
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId,@AuthenticationPrincipal CustomUserDetails details) throws java.nio.file.AccessDeniedException {
+        Long currentMemberId = details.getMemberId();
+
+        boardService.deleteBoard(boardId,currentMemberId);
         return ResponseEntity.noContent().build();
     }
 
@@ -94,9 +132,19 @@ public class BoardRestController {
     public ResponseEntity<BoardListResponse> getBoardsByCursor(
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false,value = "cursorId")Long cursorId,
-            @RequestParam(required = false,value = "CursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate)
+            @RequestParam(required = false,value = "CursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate,
+            @AuthenticationPrincipal CustomUserDetails details)
     {
-        BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate);
-        return  ResponseEntity.ok(response);
+        Long currentMemberId =(details != null) ? details.getMemberId() : null;
+
+        try{
+            BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate,currentMemberId);
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        catch(Exception e){
+            log.error("커서 기반 게시글 조회 중 오류 발생 : {}",e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 }
