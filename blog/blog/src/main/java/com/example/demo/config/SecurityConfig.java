@@ -4,6 +4,7 @@ import com.example.demo.service.member.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -61,6 +63,7 @@ public class SecurityConfig {
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/test/**").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview", "POST").permitAll()
                         // 카카오 로그인 추가하기
                         // 1. 카카오 Redirect URI (가장 중요한 부분)
                         .requestMatchers("/login/oauth2/code/kakao").permitAll()

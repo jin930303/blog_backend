@@ -53,7 +53,7 @@ public class BoardEntity {
     private String contentSummary;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id",nullable = false)
+    @JoinColumn(name = "member_id",nullable = true)
     private MemberEntity member;
 
     private Long getAuthorMemberId(){

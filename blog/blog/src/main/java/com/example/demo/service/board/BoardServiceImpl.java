@@ -6,7 +6,6 @@ import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.service.file.FileService;
-import com.example.demo.service.member.CustomUserDetails;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
@@ -15,7 +14,6 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -136,9 +134,9 @@ public class BoardServiceImpl implements BoardService {
                 .orElseThrow(()-> new EntityNotFoundException("게시글을 찾을 수 없습니다. id :"+boardDTO.getBoardId()));
 
 
-        Long authorId =board.getMember().getMemberId();
+        Long authorId = (board.getMember() != null) ? board.getMember().getMemberId() : null;
 
-        if(currentMemberId == null || !currentMemberId.equals(authorId)){
+        if(authorId == null || currentMemberId == null || !currentMemberId.equals(authorId)){
             log.warn("수정 : 게시글 작성자와 아이디가 일치 하지 않습니다. 요청 {}, 작성자 {}",currentMemberId,authorId);
             throw new AccessDeniedException("수정 권한이 없습니다. 게시글 작성자만 수정할 수 있습니다.");
         }
@@ -195,9 +193,9 @@ public class BoardServiceImpl implements BoardService {
     public void deleteBoard(Long boardId, Long currentMemberId) throws AccessDeniedException {
         BoardEntity entity = boardRepository.findById(boardId).orElseThrow(()->new EntityNotFoundException("게시글 ID를 찾을 수 없습니다."));
 
-        Long authorId = entity.getMember().getMemberId();
+        Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
 
-        if(currentMemberId == null || !currentMemberId.equals(authorId)){
+        if(authorId == null || currentMemberId == null || !currentMemberId.equals(authorId)){
             log.warn("삭제 : 게시글 작성자와 아이디가 일치 하지 않습니다. 요청 {}, 작성자 {}",currentMemberId,authorId);
             throw new AccessDeniedException("본인 게시글만 삭제 가능합니다.");
         }
@@ -249,7 +247,7 @@ public class BoardServiceImpl implements BoardService {
 
         // ⭐ 1. Repository는 BoardEntity 목록을 반환해야 합니다. (Service에서 DTO 변환)
         // boards는 size + 1개의 Entity를 포함합니다.
-        List<BoardEntity> boards = boardRepository.findNextBoards(cursorId, cursorDate,pageSize);
+        List<BoardEntity> boards = boardRepository.findNextBoardsWithMember(cursorId, cursorDate,pageSize);
 
         // 2. 다음 페이지 존재 여부 판단
         boolean hasNext = boards.size() > size;
@@ -261,8 +259,8 @@ public class BoardServiceImpl implements BoardService {
         // 4. Entity를 DTO로 변환
         List<BoardResponse> contentDtos = contentEntities.stream()
                 .map(entity -> {
-                            Long authorId = entity.getMember().getMemberId();
-                            boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+                    Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
+                            boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
                             return BoardResponse.fromEntity(entity, entity.getContentSummary(), isAuthor);
                         })
                 .collect(Collectors.toList());
@@ -296,8 +294,8 @@ public class BoardServiceImpl implements BoardService {
 
         return list.stream()
                 .map(entity -> {
-                    Long authorId = entity.getMember().getMemberId();
-                    boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+                    Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
+                    boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
                     return BoardResponse.fromEntity(entity,isAuthor);
                 } )
                 .collect(Collectors.toList());
@@ -307,9 +305,9 @@ public class BoardServiceImpl implements BoardService {
     public BoardResponse findBoardById(Long id, Long currentMemberId) {
         BoardEntity board = boardRepository.findById(id).orElseThrow(()->new EntityNotFoundException("게시판 아이디를 찾을 수 없습니다."+id));
 
-        Long authorId = board.getMember().getMemberId();
+        Long authorId = (board.getMember() != null) ? board.getMember().getMemberId() : null;
 
-        boolean isAuthor = (currentMemberId != null && currentMemberId.equals(authorId));
+        boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
 
         return BoardResponse.fromEntity(board,board.getContent(),isAuthor);
     }

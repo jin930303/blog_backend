@@ -19,24 +19,10 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
     void increaseView(@Param("boardId") Long boardId);
 
 
-    @Query(
-            value = """
-            SELECT * FROM (
-                SELECT 
-                    b.*, 
-                    ROWNUM as rn 
-                FROM 
-                    board b 
-                WHERE 
-                    (:cursorId IS NULL) OR 
-                    (b.board_id < :cursorId) 
-                ORDER BY b.board_id DESC
-            ) 
-            WHERE rn <= :pageSize
-        """,
-            nativeQuery = true
-    )
-    List<BoardEntity> findNextBoards(@Param("cursorId") Long cursorId, @Param("cursorDate") LocalDateTime cursorDate, @Param("pageSize")int pageSize);
+    @Query("SELECT b FROM BoardEntity b JOIN FETCH b.member " +
+            "WHERE (:cursorId IS NULL OR b.boardId < :cursorId) AND b.inputDate <= :cursorDate " +
+            "ORDER BY b.inputDate DESC, b.boardId DESC")
+    List<BoardEntity> findNextBoardsWithMember(@Param("cursorId") Long cursorId, @Param("cursorDate") LocalDateTime cursorDate, @Param("pageSize")int pageSize);
 
 
 }

@@ -75,7 +75,7 @@ public class BoardRestController {
             return new ResponseEntity<>(boardId,HttpStatus.CREATED);
         }
         catch(EntityNotFoundException e){
-            log.error("작성자 id : {} 를 찾을 수 없습니다.",currentMemberId);
+           /* log.error("작성자 id : {} 를 찾을 수 없습니다."*//*,currentMemberId*//*);*/
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
