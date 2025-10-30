@@ -5,6 +5,7 @@ import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.member.MemberRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
@@ -81,5 +82,22 @@ public class MemberServiceImpl implements MemberService{
 
         // 4. JWT 토큰 발행
         return jwtTokenProvider.createToken(entity.getUsername(), entity.getRole(), entity.getNickname());
+    }
+
+    @Override
+    public MemberDTO getMemberInfoById(Long memberId) {
+        MemberEntity memberEntity = memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 ID의 사용자 정보를 찾을 수 없습니다."));
+        // Entity를 DTO로 변환하여 반환
+        return new MemberDTO(
+                memberEntity.getMemberId(),     // 1. long (memberId)
+                memberEntity.getUsername(),     // 2. String (username)
+                memberEntity.getPassword(),     // 3. String (password)
+                memberEntity.getNickname(),     // 4. String (nickname)
+                memberEntity.getEmail(),        // 5. String (email)
+                memberEntity.getRole(),         // 6. String (role)
+                memberEntity.getProvider(),     // 7. String (provider)
+                memberEntity.getProviderId()    // 8. String (providerId)
+        );
     }
 }

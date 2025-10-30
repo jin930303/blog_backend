@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .cors(cors ->cors.configurationSource(corsConfigurationSource()))
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/test/**").authenticated()
                         // 카카오 로그인 추가하기
                         // 1. 카카오 Redirect URI (가장 중요한 부분)
                         .requestMatchers("/login/oauth2/code/kakao").permitAll()
@@ -74,8 +75,10 @@ public class SecurityConfig {
                         .requestMatchers("/upload/images/**").permitAll()
                         .requestMatchers("/api/v1/boards/cursor").permitAll()
                         .requestMatchers("/api/v1/boards").permitAll()
+                        .requestMatchers("/api/v1/login", "/api/v1/member", "/api/v1/check/**").permitAll()
                         // /api/v1/로 시작하는 모든 요청 허용
-                        .requestMatchers("/api/v1/**").permitAll()
+                        // 이건 토큰 없이도 통과가 되는데 그래서 필터 돌아도 참조 안 해서 null일 수도 있음
+//                        .requestMatchers("/api/v1/**").permitAll()
 
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )

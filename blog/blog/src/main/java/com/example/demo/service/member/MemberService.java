@@ -13,4 +13,6 @@ public interface MemberService {
     String getNicknameByUsername(String username);
 
     String socialLoginOrSignupAndGetJwt(KakaoUserInfoDTO userInfo);
+
+    MemberDTO getMemberInfoById(Long memberId);
 }
