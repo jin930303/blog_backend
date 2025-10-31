@@ -250,6 +250,10 @@ public class BoardServiceImpl implements BoardService {
         // 1. 요청된 크기보다 하나 더 가져와서 다음 페이지 존재 여부 확인 (size + 1)
         int pageSize = size + 1;
 
+        if(cursorDate == null){
+            cursorDate = LocalDateTime.now();
+            log.info("첫 페이지 조회: cursorDate를 현재 시간({})으로 설정했습니다. CursorId: {}", cursorDate, cursorId);
+        }
         // ⭐ 1. Repository는 BoardEntity 목록을 반환해야 합니다. (Service에서 DTO 변환)
         // boards는 size + 1개의 Entity를 포함합니다.
         List<BoardEntity> boards = boardRepository.findNextBoardsWithMember(cursorId, cursorDate,pageSize);
