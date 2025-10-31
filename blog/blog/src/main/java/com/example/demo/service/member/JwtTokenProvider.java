@@ -33,7 +33,7 @@ public class JwtTokenProvider {
         claims.put("nickname", nickname);
 
         Date now = new Date();
-        // 2. 만료 시간 설정 (예: 30분)
+        // 2. 만료 시간 설정
         long tokenValidTime = 30 * 60 * 1000L;
         Date validity = new Date(now.getTime() + tokenValidTime);
 

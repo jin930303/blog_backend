@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 @Tag(name = "게시판 (Board) API",description = "게시글 생성, 조회 , 수정, 삭제 및 커서 기반 목록 조회 기능을 제공")
 @Log4j2
 @RestController
@@ -31,6 +34,33 @@ import java.time.LocalDateTime;
 public class BoardRestController {
 
     private final BoardService boardService;
+
+    // ⭐ 1. 새로운 인증 상태 확인 API 추가
+    @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "인증 성공, 사용자 정보 반환")
+    @ApiResponse(responseCode = "401", description = "인증 실패, 유효한 토큰 없음")
+    @GetMapping("/auth-check")
+    public ResponseEntity<Map<String, Object>> authCheck(@AuthenticationPrincipal CustomUserDetails details) {
+
+        // CustomUserDetails가 null이 아니라는 것은 Spring Security Filter를 통과했다는 의미
+        if (details == null) {
+            // 이 코드가 실행되는 경우는 드물지만, 안전 장치로 남겨둡니다.
+            log.info("인증 체크 요청: CustomUserDetails가 Null입니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Map<String, Object> response = new HashMap<>();
+
+        // Spring Security는 JWT의 Claims에서 정보를 추출하여 CustomUserDetails에 담습니다.
+        response.put("isLoggedIn", true);
+        response.put("memberId", details.getMemberId());
+        // JWT Payload에 저장된 닉네임 정보를 그대로 사용합니다.
+        response.put("userNickname", details.getNickname());
+
+        log.info("인증 체크 성공: MemberId={}, Nickname={}", details.getMemberId(), details.getNickname());
+
+        return ResponseEntity.ok(response);
+    }
 
     @Data
     private static class MarkdownPreviewRequest{

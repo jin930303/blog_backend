@@ -19,6 +19,7 @@ public class CustomUserDetails implements UserDetails {
     @Getter
     private final Long memberId;
     private final String username;
+    private final String nickname;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
 
@@ -26,6 +27,7 @@ public class CustomUserDetails implements UserDetails {
         this.memberId = memberEntity.getMemberId();
         this.username = memberEntity.getUsername();
         this.password = memberEntity.getPassword();
+        this.nickname = memberEntity.getNickname();
 
         // 권한 설정
         String role = memberEntity.getRole();
