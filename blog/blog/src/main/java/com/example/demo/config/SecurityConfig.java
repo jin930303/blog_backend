@@ -41,7 +41,8 @@ public class SecurityConfig {
                 "http://192.168.0.8:5500",
                 "http://192.168.0.28:5500",
                 "http://127.0.0.1:5500",
-                "http://192.168.0.3:5500"
+                "http://192.168.0.3:5500",
+                "http://192.168.0.13:5500"
 
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -63,6 +64,8 @@ public class SecurityConfig {
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/test/**").authenticated()
+                        .requestMatchers("/api/vi/boards/auth-check").authenticated()
+                        .requestMatchers("/api/vi/boards//{boardId}/like").authenticated()
                         .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview", "POST").permitAll()
                         // 카카오 로그인 추가하기
                         // 1. 카카오 Redirect URI (가장 중요한 부분)

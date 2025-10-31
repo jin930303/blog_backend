@@ -45,9 +45,12 @@ public class BoardEntity {
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
 
-    private int likes;
-    private int views;
+    @Column(name = "likes",nullable = false)
+    private int likes ;
+
     private String category;
+
+    private int views;
 
     @Column(name = "content_summary")
     private String contentSummary;

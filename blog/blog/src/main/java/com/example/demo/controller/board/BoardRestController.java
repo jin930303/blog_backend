@@ -3,12 +3,14 @@ package com.example.demo.controller.board;
 import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
+import com.example.demo.service.board.BoardLikeService;
 import com.example.demo.service.board.BoardService;
 import com.example.demo.service.member.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.Data;
@@ -34,6 +36,7 @@ import java.util.Map;
 public class BoardRestController {
 
     private final BoardService boardService;
+    private final BoardLikeService boardLikeService;
 
     // ⭐ 1. 새로운 인증 상태 확인 API 추가
     @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
@@ -182,6 +185,36 @@ public class BoardRestController {
         catch(Exception e){
             log.error("커서 기반 게시글 조회 중 오류 발생 : {}",e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+    @Operation(summary = "게시글 좋아요/취소 토글",description = "인증된 사용자가 특정 게시글에 좋아요를 누르거나 취소합니다.")
+    @ApiResponse(responseCode = "200",description = "좋아요 상태 변경 성공. body:true(좋아요), false(취소)")
+    @ApiResponse(responseCode = "401",description = "인증 필요( 토큰 없음)")
+    @ApiResponse(responseCode = "404",description = "게시글 또는 회원 ID 찾을 수 없음")
+    @SecurityRequirement(name = "BearerAuth")
+    @PostMapping("/{boardId}/like")
+    public ResponseEntity<Boolean> toggleLike(@PathVariable("boardId")Long boardId,
+                                              @AuthenticationPrincipal CustomUserDetails details){
+        Long currentMemberId = getCurrentMemberId(details);
+
+        if(currentMemberId == null){
+            log.warn("좋아요 요청 : 비로그인 사용자 접근 거부 (401)");
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        try{
+            Boolean isLiked = boardLikeService.toggleLike(boardId,currentMemberId);
+
+            return ResponseEntity.ok(isLiked);
+        }
+        catch (EntityNotFoundException e){
+            log.warn("좋아요 토글 실패 (404 Not Found) : {}",e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+        catch (Exception e){
+            log.error("좋아요 토글 중 오류 (500 Internal Server Error) : {}",e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
     }
