@@ -5,6 +5,11 @@ import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.service.board.BoardService;
 import com.example.demo.service.member.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-
+@Tag(name = "게시판 (Board) API",description = "게시글 생성, 조회 , 수정, 삭제 및 커서 기반 목록 조회 기능을 제공")
 @Log4j2
 @RestController
 @RequestMapping("/api/v1/boards")
@@ -29,6 +34,7 @@ public class BoardRestController {
 
     @Data
     private static class MarkdownPreviewRequest{
+        @Schema(description = "미리보기할 마크다운 텍스트",example = "# 제목\n\n- 목록")
         private String markdownText;
     }
 
@@ -36,23 +42,25 @@ public class BoardRestController {
 
         return details != null ? details.getMemberId() : null;
     }
-
+    @Operation(summary = "마크다운 미리보기", description = "입력된 마크다운 텍스트를 HTML로 변환하여 반환합니다.")
+    @ApiResponse(responseCode = "200",description = "HTML 컨텐츠 변환 성공",
+                content = @Content(mediaType = "text/html",schema = @Schema(implementation = String.class)))
     @PostMapping(value = "/markdown-preview",produces = "text/html; charset=utf-8")
     public ResponseEntity<String> previewMarkdown(@RequestBody MarkdownPreviewRequest request){
         String htmlContent = boardService.markdownHtml(request.getMarkdownText());
         return ResponseEntity.ok(htmlContent);
     }
 
-    @PostMapping("upload-image")
-    public ResponseEntity<?> uploadImage(@RequestParam("file")MultipartFile file){
-        try{
-            String fileUrl = boardService.uploadFile(file);
-            return ResponseEntity.ok(fileUrl);
-        }
-        catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+//    @PostMapping("upload-image")
+//    public ResponseEntity<?> uploadImage(@RequestParam("file")MultipartFile file){
+//        try{
+//            String fileUrl = boardService.uploadFile(file);
+//            return ResponseEntity.ok(fileUrl);
+//        }
+//        catch (IllegalArgumentException e){
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+//    }
     @PostMapping
     public ResponseEntity<Long> createBoard(@RequestBody BoardDTO boardDTO, @AuthenticationPrincipal CustomUserDetails details){
 

@@ -2,8 +2,10 @@ package com.example.demo.service.member;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,7 +16,15 @@ import java.security.Key;
 @Component
 public class JwtTokenProvider {
     // application.프로펄티 or @벨류를 통해 Secret Key와 만료 설정
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.secret-key}")
+    private String seceretKeyString;
+
+    private Key key;
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(seceretKeyString.getBytes());
+    }
 
     public String createToken(String username, String role, String nickname) {
         // 1. 클레임 (정보) 설정: 주체(Subject)와 역할(Role) 등을 담음

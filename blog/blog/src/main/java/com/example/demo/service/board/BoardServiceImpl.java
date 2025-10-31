@@ -4,7 +4,9 @@ import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
+import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.board.BoardRepository;
+import com.example.demo.repository.member.MemberRepository;
 import com.example.demo.service.file.FileService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepository;
+    private final MemberRepository memberRepository;
     private final FileService fileService;
 
     private static final MutableDataSet OPTIONS = new MutableDataSet();
@@ -83,7 +86,8 @@ public class BoardServiceImpl implements BoardService {
         final String finalFilePathToSave = null;
         final String originalFileName = null;
         final Long fileSize =0L;
-
+        MemberEntity author = memberRepository.findById(currentMemberId)
+                .orElseThrow(()->new EntityNotFoundException("작성자 ID 를 찾을 수 없습니다. 게시글을 작성 할 수 없습니다."));
         String htmlContent = markdownToHtml(boardDTO.getContent());
 
         String textForSummary = htmlContent;
@@ -107,6 +111,7 @@ public class BoardServiceImpl implements BoardService {
                 .views(0)
                 .likes(0)
                 .contentSummary(contentSummary)
+                .member(author)
                 .build();
         BoardEntity saveEntity = boardRepository.save(entity);
         return saveEntity.getBoardId();
