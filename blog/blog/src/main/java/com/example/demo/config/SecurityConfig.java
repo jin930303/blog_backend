@@ -64,9 +64,10 @@ public class SecurityConfig {
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/test/**").authenticated()
-                        .requestMatchers("/api/vi/boards/auth-check").authenticated()
-                        .requestMatchers("/api/vi/boards//{boardId}/like").authenticated()
-                        .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview", "POST").permitAll()
+                        .requestMatchers("/api/v1/boards/auth-check").authenticated()
+                        .requestMatchers("/api/v1/boards//{boardId}/like").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/boards/{boardId}").permitAll()
                         // 카카오 로그인 추가하기
                         // 1. 카카오 Redirect URI (가장 중요한 부분)
                         .requestMatchers("/login/oauth2/code/kakao").permitAll()

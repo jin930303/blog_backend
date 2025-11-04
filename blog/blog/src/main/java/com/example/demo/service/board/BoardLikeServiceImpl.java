@@ -58,4 +58,12 @@ public class BoardLikeServiceImpl implements BoardLikeService{
         }
 
     }
+
+    @Override
+    public boolean isBoardLikedByUser(Long boardId, Long currentMemberId) {
+
+        Long count = boardLikeRepository.isBoardLikedByUser(boardId,currentMemberId);
+
+        return count != null && count >0 ;
+    }
 }

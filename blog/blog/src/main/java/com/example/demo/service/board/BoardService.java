@@ -3,6 +3,7 @@ package com.example.demo.service.board;
 import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
+import com.example.demo.entity.board.BoardEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.AccessDeniedException;
@@ -27,4 +28,6 @@ public interface BoardService {
     void increaseView(Long boardId);
 
     BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate,Long currentMemberId);
+
+    BoardEntity findBoardByIdExceptUser(Long boardId);
 }

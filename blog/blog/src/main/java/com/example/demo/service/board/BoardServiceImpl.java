@@ -298,6 +298,13 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    public BoardEntity findBoardByIdExceptUser(Long boardId) {
+        BoardEntity entity = boardRepository.findById(boardId)
+                .orElseThrow(()-> new EntityNotFoundException("게시판 아이디를 찾을 수 없습니다."+boardId));
+        return entity;
+    }
+
+    @Override
     public List<BoardResponse> findAllBoards(Long currentMemberId) {
             List<BoardEntity> list = boardRepository.findAllWithMember();
 

@@ -1,8 +1,7 @@
 package com.example.demo.controller.board;
 
-import com.example.demo.dto.board.BoardDTO;
-import com.example.demo.dto.board.BoardListResponse;
-import com.example.demo.dto.board.BoardResponse;
+import com.example.demo.dto.board.*;
+import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.service.board.BoardLikeService;
 import com.example.demo.service.board.BoardService;
 import com.example.demo.service.member.CustomUserDetails;
@@ -122,16 +121,19 @@ public class BoardRestController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<BoardResponse> detail(@PathVariable("boardId")Long boardId,@AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<BoardDetailResponse> detail(@PathVariable("boardId")Long boardId,@AuthenticationPrincipal CustomUserDetails details){
 
-        Long currentMemberId = details.getMemberId();
+        Long currentMemberId = (details != null)?details.getMemberId(): null;
 
-        BoardResponse board = boardService.findBoardById(boardId,currentMemberId);
+        BoardEntity board = boardService.findBoardByIdExceptUser(boardId);
         boardService.increaseView(boardId);
-        log.info("boardId = {}",boardId);
-        log.info("content = {}",board.content());
-        System.out.println("boardId : "+boardId);
-        return ResponseEntity.ok(board);
+
+        Long authorId = board.getMember().getMemberId();
+        boolean isAuthor = (currentMemberId != null) && currentMemberId.equals(authorId);
+
+        Boolean isLiked = currentMemberId != null && boardLikeService.isBoardLikedByUser(boardId, currentMemberId);
+        BoardDetailResponse response = BoardDetailResponse.of(board,isAuthor,isLiked);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{boardId}")
@@ -217,5 +219,15 @@ public class BoardRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+    }
+    @Operation(summary = "댓글 작성 토글",description = "인증된 사용자가 해당 게시글에 댓글을 작성합니다.")
+    @ApiResponse(responseCode = "201",description = "댓글 작성 성공")
+    @ApiResponse(responseCode = "401",description = "댓글 작성 권한 오류 401 UNAUTHORIZED")
+    @ApiResponse(responseCode = "404",description = "작성자 ID를 찾을 수 없음")
+    @PostMapping("/comment")
+    public ResponseEntity<BoardCommentDTO>createComment(){
+
+
+        return;
     }
 }
