@@ -29,8 +29,9 @@ public class FileServiceImpl implements FileService{
         }
 
         String originalFileName = file.getOriginalFilename();
+        String cleanFileName = originalFileName.replaceAll("\\s","_");
         String uuid = UUID.randomUUID().toString();
-        String saveFileName = uuid + "_" + originalFileName;
+        String saveFileName = uuid + "_" + cleanFileName;
 
         File uploadDirectory = new File(targetDir);
         if(!uploadDirectory.exists()){
