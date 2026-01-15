@@ -83,16 +83,16 @@ public class BoardRestController {
         return ResponseEntity.ok(htmlContent);
     }
 
-//    @PostMapping("upload-image")
-//    public ResponseEntity<?> uploadImage(@RequestParam("file")MultipartFile file){
-//        try{
-//            String fileUrl = boardService.uploadFile(file);
-//            return ResponseEntity.ok(fileUrl);
-//        }
-//        catch (IllegalArgumentException e){
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file")MultipartFile file){
+        try{
+            String fileUrl = boardService.uploadFile(file);
+            return ResponseEntity.ok(fileUrl);
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @PostMapping
     public ResponseEntity<Long> createBoard(@RequestBody BoardDTO boardDTO, @AuthenticationPrincipal CustomUserDetails details){
 
@@ -220,7 +220,7 @@ public class BoardRestController {
         }
 
     }
-    @Operation(summary = "댓글 작성 토글",description = "인증된 사용자가 해당 게시글에 댓글을 작성합니다.")
+    /*@Operation(summary = "댓글 작성 토글",description = "인증된 사용자가 해당 게시글에 댓글을 작성합니다.")
     @ApiResponse(responseCode = "201",description = "댓글 작성 성공")
     @ApiResponse(responseCode = "401",description = "댓글 작성 권한 오류 401 UNAUTHORIZED")
     @ApiResponse(responseCode = "404",description = "작성자 ID를 찾을 수 없음")
@@ -229,5 +229,5 @@ public class BoardRestController {
 
 
         return;
-    }
+    }*/
 }

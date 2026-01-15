@@ -15,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -64,7 +63,7 @@ public class SecurityConfig {
                 // 1. **핵심 설정**: API 경로는 인증 없이 접근 가능하도록 허용 (API 공개)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/test/**").authenticated()
-                        .requestMatchers("/api/v1/boards/auth-check").authenticated()
+                        .requestMatchers("/api/v1/boards/auth-check").permitAll()
                         .requestMatchers("/api/v1/boards//{boardId}/like").authenticated()
                         .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/boards/{boardId}").permitAll()
@@ -86,7 +85,7 @@ public class SecurityConfig {
                         // /api/v1/로 시작하는 모든 요청 허용
                         // 이건 토큰 없이도 통과가 되는데 그래서 필터 돌아도 참조 안 해서 null일 수도 있음
 //                        .requestMatchers("/api/v1/**").permitAll()
-
+                        .requestMatchers("/api/v1/boards/upload-image").authenticated()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요 (나머지 페이지 보호)
                 )
 
