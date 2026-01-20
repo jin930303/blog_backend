@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/boards//{boardId}/like").authenticated()
                         .requestMatchers(HttpMethod.POST,"/api/v1/boards/markdown-preview").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/boards/{boardId}").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/boards/{boardId}/**").permitAll()
                         // 카카오 로그인 추가하기
                         // 1. 카카오 Redirect URI (가장 중요한 부분)
                         .requestMatchers("/login/oauth2/code/kakao").permitAll()
