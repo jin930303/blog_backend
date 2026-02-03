@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET,"/api/v1/subscriptions/**").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v1/subscriptions/**").authenticated()
+                        .requestMatchers("/api/v1/notifications/subscribe").authenticated()
                         .requestMatchers("/api/v1/test/**").authenticated()
                         .requestMatchers("/api/v1/boards/auth-check").permitAll()
                         .requestMatchers("/api/v1/boards/{boardId}/like").authenticated()

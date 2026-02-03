@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 @Repository
 public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity,Long> {
@@ -16,4 +17,6 @@ public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity
 
     @Query("SELECT COUNT(*) FROM SubscriptionEntity s WHERE s.follower = :follower AND s.following = :following")
     long countByFollowerAndFollowing(@Param("follower") MemberEntity follower, @Param("following") MemberEntity following);
+
+    List<SubscriptionEntity> findAllByFollowing(MemberEntity following);
 }

@@ -10,6 +10,7 @@ import com.example.demo.repository.board.BoardCommentRepository;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.board.CommentLikeRepository;
 import com.example.demo.repository.member.MemberRepository;
+import com.example.demo.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -31,6 +32,7 @@ public class BoardCommentImpl implements BoardCommentService{
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final NotificationService notificationService;
 
     private MemberEntity getCurrentMember(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -69,6 +71,14 @@ public class BoardCommentImpl implements BoardCommentService{
                 .likes(0)
                 .build();
         BoardCommentEntity savedComment = commentRepository.save(comment);
+
+        MemberEntity boardWriter = board.getMember();
+        if(boardWriter.getMemberId() != member.getMemberId()){
+            notificationService.send(
+                    boardWriter,member.getNickname() + "님이 게시글에 댓글을 남겼습니다.",
+                    "/board/"+boardId
+            );
+        }
         return convertToDTO(savedComment,member);
     }
     @Override
@@ -132,6 +142,13 @@ public class BoardCommentImpl implements BoardCommentService{
                     .build();
             commentLikeRepository.save(like);
             comment.setLikes(comment.getLikes()+1);
+
+            MemberEntity commentWriter = comment.getMember();
+            if(commentWriter.getMemberId() != member.getMemberId()){
+                notificationService.send(
+                        commentWriter,member.getNickname()+"님이 회원님의 댓글을 좋아합니다.","/board/"+boardId
+                );
+            }
             return true;
         }
     }
