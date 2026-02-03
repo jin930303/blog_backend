@@ -24,5 +24,12 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
             "ORDER BY b.inputDate DESC, b.boardId DESC")
     List<BoardEntity> findNextBoardsWithMember(@Param("cursorId") Long cursorId, @Param("cursorDate") LocalDateTime cursorDate, @Param("pageSize")int pageSize);
 
-
+    @Query("SELECT b FROM BoardEntity b " +
+            "LEFT JOIN FETCH b.member m " +
+            "LEFT JOIN b.boardHashtags bh " +
+            "LEFT JOIN bh.hashtag h " +
+            "WHERE (:keyword IS NULL OR b.title LIKE CONCAT('%' , :keyword , '%') OR b.content LIKE CONCAT('%', :keyword, '%')) " +
+            "AND (:tagName IS NULL OR h.name = :tagName) " +
+            "ORDER BY b.inputDate DESC")
+    List<BoardEntity> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName);
 }
