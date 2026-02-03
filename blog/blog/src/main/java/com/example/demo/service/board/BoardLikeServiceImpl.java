@@ -6,6 +6,7 @@ import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.board.BoardLikeRepository;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.member.MemberRepository;
+import com.example.demo.service.notification.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class BoardLikeServiceImpl implements BoardLikeService{
     private final BoardLikeRepository boardLikeRepository;
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -54,6 +56,15 @@ public class BoardLikeServiceImpl implements BoardLikeService{
             boardLikeRepository.save(newLike);
 
             board.setLikes(board.getLikes() + 1);
+
+           MemberEntity writer = board.getMember();
+           if(writer.getMemberId() != member.getMemberId()){
+               notificationService.send(
+                       writer,member.getNickname()+"님이 회원님의 게시글을 좋아합니다.",
+                       "/board/"+boardId
+               );
+           }
+
             return true;
         }
 

@@ -8,6 +8,7 @@ import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.member.MemberRepository;
 import com.example.demo.service.file.FileService;
+import com.example.demo.service.notification.NotificationService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
