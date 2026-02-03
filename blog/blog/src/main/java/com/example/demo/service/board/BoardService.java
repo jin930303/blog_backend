@@ -30,4 +30,6 @@ public interface BoardService {
     BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate,Long currentMemberId);
 
     BoardEntity findBoardByIdExceptUser(Long boardId);
+
+    List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId);
 }
