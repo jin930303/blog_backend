@@ -4,6 +4,7 @@ import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.entity.subscription.SubscriptionEntity;
 import com.example.demo.repository.member.MemberRepository;
 import com.example.demo.repository.subscription.SubscriptionRepository;
+import com.example.demo.service.notification.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ public class SubscriptionServiceImpl implements SubscriptionService{
 
     private final SubscriptionRepository subscriptionRepository;
     private final MemberRepository memberRepository;
+    private final NotificationServiceImpl notificationService;
 
     @Transactional
     @Override
@@ -39,6 +41,11 @@ public class SubscriptionServiceImpl implements SubscriptionService{
                             .following(following)
                             .build();
                     subscriptionRepository.save(subscription);
+                    notificationService.send(
+                            following,
+                            follower.getNickname() + "님이 회원님을 구독했습니다!.",
+                            "/users/" + follower.getMemberId()
+                    );
                     return true;
                 });
     }
