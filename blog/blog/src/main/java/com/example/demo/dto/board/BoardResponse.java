@@ -4,6 +4,8 @@ import com.example.demo.entity.board.BoardEntity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 
 public record BoardResponse(
         Long boardId,
@@ -19,6 +21,7 @@ public record BoardResponse(
         int likes,
         int views,
         String category,
+        List<String> tags,
 
         Boolean isAuthor
 ) {
@@ -28,14 +31,19 @@ public record BoardResponse(
     // =========================================================================
     // 💡 1. 오버로딩 메서드 추가 (List.stream().map()에서 사용)
     // =========================================================================
+    // 1-1 태그가 없는 경우(기존 코드 호환용, 빈 리스트 처리)
     public static BoardResponse fromEntity(BoardEntity entity, boolean isAuthor) {
         // 목록 조회 시 엔티티의 Content를 그대로 사용하도록 합니다.
         // 상세 조회 시에만 contentOverride를 사용하므로, 이 경우 null을 전달하여 엔티티의 내용을 사용하도록 위임합니다.
         // 또는 contentOverride를 'Optional'로 만들어서 처리할 수 있지만, 여기서는 단순하게 entity.getContent()를 전달합니다.
-        return fromEntity(entity, entity.getContentSummary(),isAuthor);
+        return fromEntity(entity, Collections.emptyList(),entity.getContentSummary(),isAuthor);
     }
-
-    public static BoardResponse fromEntity(BoardEntity entity,String contentOverrideOrSummary, boolean isAuthor){
+    //1-2 태그가 있는 경우
+    public static BoardResponse fromEntity(BoardEntity entity, List<String> tags,boolean isAuthor){
+        return fromEntity(entity,tags,entity.getContentSummary(),isAuthor);
+    }
+    //1-3 메인 변환 로직(내용 요약/전체구분 + 태그포함)
+    public static BoardResponse fromEntity(BoardEntity entity,List<String> tags,String contentOverrideOrSummary, boolean isAuthor){
         String webFilePath = null;
 
         if(entity.getFilePath() !=null && !entity.getFilePath().isEmpty()) {
@@ -57,6 +65,7 @@ public record BoardResponse(
                 entity.getLikes(),
                 entity.getViews(),
                 entity.getCategory(),
+                tags != null ? tags : Collections.emptyList(),
                 isAuthor
 
         );

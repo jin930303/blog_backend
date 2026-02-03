@@ -4,11 +4,14 @@ import com.example.demo.dto.board.BoardDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
+import com.example.demo.entity.board.BoardHashtagEntity;
+import com.example.demo.entity.board.HashtagEntity;
 import com.example.demo.entity.member.MemberEntity;
+import com.example.demo.repository.board.BoardHashtagRepository;
 import com.example.demo.repository.board.BoardRepository;
+import com.example.demo.repository.board.HashtagRepository;
 import com.example.demo.repository.member.MemberRepository;
 import com.example.demo.service.file.FileService;
-import com.example.demo.service.notification.NotificationService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
@@ -41,6 +44,10 @@ public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
     private final FileService fileService;
+
+    //hashtag
+    private final BoardHashtagRepository boardHashtagRepository;
+    private final HashtagRepository hashtagRepository;
 
     private static final MutableDataSet OPTIONS = new MutableDataSet();
     private static final Parser MARKDOWN_PARSER = Parser.builder(OPTIONS).build();
@@ -80,6 +87,22 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    private void saveHashtags(BoardEntity board, List<String> tagNames){
+        if(tagNames ==null || tagNames.isEmpty()){
+            return;
+        }
+        for(String tagName : tagNames){
+            // 공백 제거 및 # 제거
+            String name = tagName.trim().replace("#","");
+            if(name.isEmpty()) continue;
+            // 태그가 존재하면 가져오고 없으면 새로 저장
+            HashtagEntity hashtag = hashtagRepository.findByName(name)
+                    .orElseGet(() -> hashtagRepository.save(new HashtagEntity(name)));
+            // 게시글- 태그 연결 정보 저장
+            boardHashtagRepository.save(new BoardHashtagEntity(board,hashtag));
+        }
+    }
+
     @Override
     @Transactional
     public Long saveNewBoard(BoardDTO boardDTO, Long currentMemberId) {
@@ -115,6 +138,11 @@ public class BoardServiceImpl implements BoardService {
                 .member(author)
                 .build();
         BoardEntity saveEntity = boardRepository.save(entity);
+        // 해시태그 저장 호출
+        if(boardDTO.getTags() != null){
+            saveHashtags(saveEntity,boardDTO.getTags());
+        }
+
         return saveEntity.getBoardId();
     }
 
@@ -189,9 +217,15 @@ public class BoardServiceImpl implements BoardService {
                 fileSize,
                 finalFilePathToSave,
                 contentSummary
-
-
         );
+        //해시태그 업데이트 로직
+        // 1. 기존 연결 모두 삭제
+        boardHashtagRepository.deleteByBoardId(board.getBoardId());
+
+        // 2. 새 태그 목록 저장
+        if(boardDTO.getTags() != null){
+            saveHashtags(board,boardDTO.getTags());
+        }
     }
 
     @Override
@@ -271,7 +305,7 @@ public class BoardServiceImpl implements BoardService {
                 .map(entity -> {
                     Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
                             boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
-                            return BoardResponse.fromEntity(entity, entity.getContentSummary(), isAuthor);
+                            return BoardResponse.fromEntity(entity,Collections.emptyList(), entity.getContentSummary(), isAuthor);
                         })
                 .collect(Collectors.toList());
         // 5. 다음 커서 값 설정
@@ -306,6 +340,26 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId) {
+
+        String searchKeyword = null;
+        if(keyword != null && !keyword.trim().isEmpty()){
+            searchKeyword = "%" + keyword.trim()+"%";
+        }
+
+        List<BoardEntity> boards = boardRepository.searchBoards(searchKeyword,tagName);
+
+        return boards.stream()
+                .distinct()
+                .map(entity ->{
+                    Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
+                    boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
+                    return BoardResponse.fromEntity(entity,Collections.emptyList(),entity.getContentSummary(),isAuthor);
+                })
+                .toList();
+    }
+
+    @Override
     public List<BoardResponse> findAllBoards(Long currentMemberId) {
             List<BoardEntity> list = boardRepository.findAllWithMember();
 
@@ -313,7 +367,7 @@ public class BoardServiceImpl implements BoardService {
                 .map(entity -> {
                     Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
                     boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
-                    return BoardResponse.fromEntity(entity,isAuthor);
+                    return BoardResponse.fromEntity(entity,Collections.emptyList(),entity.getContentSummary(),isAuthor);
                 } )
                 .collect(Collectors.toList());
     }
@@ -323,10 +377,14 @@ public class BoardServiceImpl implements BoardService {
         BoardEntity board = boardRepository.findById(id).orElseThrow(()->new EntityNotFoundException("게시판 아이디를 찾을 수 없습니다."+id));
 
         Long authorId = (board.getMember() != null) ? board.getMember().getMemberId() : null;
-
         boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
 
-        return BoardResponse.fromEntity(board,board.getContent(),isAuthor);
+        List<BoardHashtagEntity> boardHashtags = boardHashtagRepository.findAllByBoardId(id);
+        List<String> tags = boardHashtags.stream()
+                .map(bh -> bh.getHashtag().getName())
+                .toList();
+
+        return BoardResponse.fromEntity(board,tags,board.getContent(),isAuthor);
     }
 
     @Override

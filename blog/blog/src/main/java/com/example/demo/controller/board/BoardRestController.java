@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Tag(name = "게시판 (Board) API",description = "게시글 생성, 조회 , 수정, 삭제 및 커서 기반 목록 조회 기능을 제공")
@@ -220,14 +221,15 @@ public class BoardRestController {
         }
 
     }
-    /*@Operation(summary = "댓글 작성 토글",description = "인증된 사용자가 해당 게시글에 댓글을 작성합니다.")
-    @ApiResponse(responseCode = "201",description = "댓글 작성 성공")
-    @ApiResponse(responseCode = "401",description = "댓글 작성 권한 오류 401 UNAUTHORIZED")
-    @ApiResponse(responseCode = "404",description = "작성자 ID를 찾을 수 없음")
-    @PostMapping("/comment")
-    public ResponseEntity<BoardCommentDTO>createComment(){
 
-
-        return;
-    }*/
+    @GetMapping("/search")
+    public ResponseEntity<List<BoardResponse>> searchBoards(
+            @RequestParam(value = "keyword",required = false) String keyword,
+            @RequestParam(value = "tagName",required = false) String tagName,
+            @AuthenticationPrincipal CustomUserDetails userDetails)
+    {
+        Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
+        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId);
+        return ResponseEntity.ok(result);
+    }
 }

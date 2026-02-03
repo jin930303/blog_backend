@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Setter
@@ -62,6 +64,9 @@ public class BoardEntity {
     private Long getAuthorMemberId(){
         return this.member != null ? this.member.getMemberId() : null;
     }
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<BoardHashtagEntity> boardHashtags = new ArrayList<>();
 
     public void update(
             String title,
