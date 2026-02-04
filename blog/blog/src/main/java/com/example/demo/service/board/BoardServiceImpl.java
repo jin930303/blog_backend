@@ -1,6 +1,6 @@
 package com.example.demo.service.board;
 
-import com.example.demo.dto.board.BoardDTO;
+import com.example.demo.dto.board.BoardRequestDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
@@ -105,14 +105,14 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public Long saveNewBoard(BoardDTO boardDTO, Long currentMemberId) {
+    public Long saveNewBoard(BoardRequestDTO boardRequestDTO, Long currentMemberId) {
 
         final String finalFilePathToSave = null;
         final String originalFileName = null;
         final Long fileSize =0L;
         MemberEntity author = memberRepository.findById(currentMemberId)
                 .orElseThrow(()->new EntityNotFoundException("작성자 ID 를 찾을 수 없습니다. 게시글을 작성 할 수 없습니다."));
-        String htmlContent = markdownToHtml(boardDTO.getContent());
+        String htmlContent = markdownToHtml(boardRequestDTO.getContent());
 
         String textForSummary = htmlContent;
         final int SUMMARY_LENGTH = 200;
@@ -123,10 +123,10 @@ public class BoardServiceImpl implements BoardService {
         }
 
         BoardEntity entity = BoardEntity.builder()
-                .title(boardDTO.getTitle())
+                .title(boardRequestDTO.getTitle())
                 .content(htmlContent)
-                .nickname(boardDTO.getNickname())
-                .category(boardDTO.getCategory())
+                .nickname(boardRequestDTO.getNickname())
+                .category(boardRequestDTO.getCategory())
                 .inputDate(LocalDateTime.now())
                 .modifiedDate(LocalDateTime.now())
                 .fileOriginalName(originalFileName)
@@ -139,8 +139,8 @@ public class BoardServiceImpl implements BoardService {
                 .build();
         BoardEntity saveEntity = boardRepository.save(entity);
         // 해시태그 저장 호출
-        if(boardDTO.getTags() != null){
-            saveHashtags(saveEntity,boardDTO.getTags());
+        if(boardRequestDTO.getTags() != null){
+            saveHashtags(saveEntity, boardRequestDTO.getTags());
         }
 
         return saveEntity.getBoardId();
@@ -158,14 +158,14 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public void updateBoard(BoardDTO boardDTO,Long currentMemberId) throws AccessDeniedException {
+    public void updateBoard(BoardRequestDTO boardRequestDTO, Long currentMemberId) throws AccessDeniedException {
 
         final String finalFilePathToSave = null;
         final String originalFileName = null;
         final Long fileSize =0L;
 
-        BoardEntity board = boardRepository.findById(boardDTO.getBoardId())
-                .orElseThrow(()-> new EntityNotFoundException("게시글을 찾을 수 없습니다. id :"+boardDTO.getBoardId()));
+        BoardEntity board = boardRepository.findById(boardRequestDTO.getBoardId())
+                .orElseThrow(()-> new EntityNotFoundException("게시글을 찾을 수 없습니다. id :"+ boardRequestDTO.getBoardId()));
 
 
         Long authorId = (board.getMember() != null) ? board.getMember().getMemberId() : null;
@@ -178,7 +178,7 @@ public class BoardServiceImpl implements BoardService {
 
         String oldContent = board.getContent();
 
-        String newHtmlContent = markdownToHtml(boardDTO.getContent());
+        String newHtmlContent = markdownToHtml(boardRequestDTO.getContent());
 
         String textForSummary = newHtmlContent;
         final int SUMMARY_LENGTH = 200;
@@ -209,10 +209,10 @@ public class BoardServiceImpl implements BoardService {
         }
 
         board.update(
-                boardDTO.getTitle(),
-                boardDTO.getNickname(),
+                boardRequestDTO.getTitle(),
+                boardRequestDTO.getNickname(),
                 newHtmlContent,
-                boardDTO.getCategory(),
+                boardRequestDTO.getCategory(),
                 originalFileName,
                 fileSize,
                 finalFilePathToSave,
@@ -223,8 +223,8 @@ public class BoardServiceImpl implements BoardService {
         boardHashtagRepository.deleteByBoardId(board.getBoardId());
 
         // 2. 새 태그 목록 저장
-        if(boardDTO.getTags() != null){
-            saveHashtags(board,boardDTO.getTags());
+        if(boardRequestDTO.getTags() != null){
+            saveHashtags(board, boardRequestDTO.getTags());
         }
     }
 
@@ -347,7 +347,12 @@ public class BoardServiceImpl implements BoardService {
             searchKeyword = "%" + keyword.trim()+"%";
         }
 
-        List<BoardEntity> boards = boardRepository.searchBoards(searchKeyword,tagName);
+        String searchTagName = null;
+        if(tagName != null && !tagName.trim().isEmpty()){
+            searchTagName = tagName.trim();
+        }
+
+        List<BoardEntity> boards = boardRepository.searchBoards(searchKeyword,searchTagName);
 
         return boards.stream()
                 .distinct()
@@ -378,12 +383,10 @@ public class BoardServiceImpl implements BoardService {
 
         Long authorId = (board.getMember() != null) ? board.getMember().getMemberId() : null;
         boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
-
         List<BoardHashtagEntity> boardHashtags = boardHashtagRepository.findAllByBoardId(id);
         List<String> tags = boardHashtags.stream()
                 .map(bh -> bh.getHashtag().getName())
                 .toList();
-
         return BoardResponse.fromEntity(board,tags,board.getContent(),isAuthor);
     }
 
