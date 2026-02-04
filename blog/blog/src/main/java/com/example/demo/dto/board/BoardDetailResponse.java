@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,6 +25,7 @@ public class BoardDetailResponse {
     private Boolean isAuthor;
 
     private Boolean isLikedByCurrentUser;
+    private List<String> tags;
 
     @Getter
     @Builder
@@ -32,7 +34,7 @@ public class BoardDetailResponse {
         private String nickname;
     }
 
-    public static BoardDetailResponse of(BoardEntity board, Boolean isAuthor, Boolean isLiked){
+    public static BoardDetailResponse of(BoardEntity board, Boolean isAuthor, Boolean isLiked, List<String> tags){
         return BoardDetailResponse.builder()
                 .boardId(board.getBoardId())
                 .title(board.getTitle())
@@ -47,6 +49,7 @@ public class BoardDetailResponse {
                         .build())
                 .isAuthor(isAuthor)
                 .isLikedByCurrentUser(isLiked)
+                .tags(tags)
                 .build();
 
     }

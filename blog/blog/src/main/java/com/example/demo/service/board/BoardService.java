@@ -1,6 +1,6 @@
 package com.example.demo.service.board;
 
-import com.example.demo.dto.board.BoardDTO;
+import com.example.demo.dto.board.BoardRequestDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BoardService {
-    Long saveNewBoard(BoardDTO boardDTO, Long currentMemberId);
+    Long saveNewBoard(BoardRequestDTO boardRequestDTO, Long currentMemberId);
 
     List<BoardResponse> findAllBoards(Long currentMemberId);
 
@@ -21,7 +21,7 @@ public interface BoardService {
 
     String uploadFile(MultipartFile file);
 
-    void updateBoard(BoardDTO boardDTO, Long currentMemberId) throws AccessDeniedException;
+    void updateBoard(BoardRequestDTO boardRequestDTO, Long currentMemberId) throws AccessDeniedException;
 
     void deleteBoard(Long boardId, Long currentMemberId) throws AccessDeniedException;
 

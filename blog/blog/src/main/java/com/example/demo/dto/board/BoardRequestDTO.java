@@ -9,7 +9,7 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-public class BoardDTO {
+public class BoardRequestDTO {
         private Long boardId;
         private String title;
         private String content;

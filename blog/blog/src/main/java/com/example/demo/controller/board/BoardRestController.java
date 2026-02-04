@@ -2,6 +2,8 @@ package com.example.demo.controller.board;
 
 import com.example.demo.dto.board.*;
 import com.example.demo.entity.board.BoardEntity;
+import com.example.demo.entity.board.BoardHashtagEntity;
+import com.example.demo.repository.board.BoardHashtagRepository;
 import com.example.demo.service.board.BoardLikeService;
 import com.example.demo.service.board.BoardService;
 import com.example.demo.service.member.CustomUserDetails;
@@ -37,6 +39,7 @@ public class BoardRestController {
 
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
+    private final BoardHashtagRepository boardHashtagRepository;
 
     // ⭐ 1. 새로운 인증 상태 확인 API 추가
     @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
@@ -95,7 +98,7 @@ public class BoardRestController {
         }
     }
     @PostMapping
-    public ResponseEntity<Long> createBoard(@RequestBody BoardDTO boardDTO, @AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<Long> createBoard(@RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
 
         if(details == null){
             log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
@@ -112,7 +115,7 @@ public class BoardRestController {
         }
 
         try{
-            Long boardId = boardService.saveNewBoard(boardDTO, currentMemberId);
+            Long boardId = boardService.saveNewBoard(boardRequestDTO, currentMemberId);
             return new ResponseEntity<>(boardId,HttpStatus.CREATED);
         }
         catch(EntityNotFoundException e){
@@ -133,20 +136,24 @@ public class BoardRestController {
         boolean isAuthor = (currentMemberId != null) && currentMemberId.equals(authorId);
 
         Boolean isLiked = currentMemberId != null && boardLikeService.isBoardLikedByUser(boardId, currentMemberId);
-        BoardDetailResponse response = BoardDetailResponse.of(board,isAuthor,isLiked);
+        List<BoardHashtagEntity> hashtagEntities = boardHashtagRepository.findAllByBoardId(boardId);
+        List<String> tags = hashtagEntities.stream()
+                .map(entity -> entity.getHashtag().getName())
+                .toList();
+        BoardDetailResponse response = BoardDetailResponse.of(board,isAuthor,isLiked,tags);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @RequestBody BoardDTO boardDTO,@AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
 
         Long currentMemberId = details.getMemberId();
 
 
         try{
-            boardDTO.setBoardId(boardId);
+            boardRequestDTO.setBoardId(boardId);
             // Service 메서드 시그니처 변경에 맞춰 currentMemberId를 추가했습니다.
-            boardService.updateBoard(boardDTO, currentMemberId);
+            boardService.updateBoard(boardRequestDTO, currentMemberId);
             return ResponseEntity.noContent().build();
         }
         // AccessDeniedException은 서비스 계층에서 권한이 없는 경우 발생합니다.
@@ -225,7 +232,7 @@ public class BoardRestController {
     @GetMapping("/search")
     public ResponseEntity<List<BoardResponse>> searchBoards(
             @RequestParam(value = "keyword",required = false) String keyword,
-            @RequestParam(value = "tagName",required = false) String tagName,
+            @RequestParam(required = false,value = "tag") String tagName,
             @AuthenticationPrincipal CustomUserDetails userDetails)
     {
         Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
