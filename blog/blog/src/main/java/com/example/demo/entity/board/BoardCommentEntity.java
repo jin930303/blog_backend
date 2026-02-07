@@ -3,8 +3,11 @@ package com.example.demo.entity.board;
 import com.example.demo.entity.member.MemberEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +28,7 @@ public class BoardCommentEntity {
 
     @Column(name = "input_date",nullable = false)
     private LocalDateTime inputDate;
+
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
 
@@ -43,6 +47,16 @@ public class BoardCommentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id",nullable = false)
     private BoardEntity board;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private BoardCommentEntity parent;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "parent",orphanRemoval = true)
+    @OrderBy("inputDate ASC, commentId ASC")
+    @BatchSize(size = 100)
+    private List<BoardCommentEntity> children = new ArrayList<>();
 
 
     @PrePersist

@@ -3,11 +3,13 @@ package com.example.demo.controller.board;
 import com.example.demo.dto.board.CommentRequestDTO;
 import com.example.demo.dto.board.CommentResponseDTO;
 import com.example.demo.service.board.BoardCommentService;
+import com.example.demo.service.member.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +33,7 @@ public class BoardCommentController {
     @PostMapping
     public ResponseEntity<CommentResponseDTO> createComment(
             @PathVariable Long boardId , @Valid @RequestBody CommentRequestDTO requestDTO){
+
         log.info("댓글 작성 요청- boardId :{}, content : {}",boardId,requestDTO.getContent());
         try{
             CommentResponseDTO response = commentService.createComment(boardId,requestDTO);

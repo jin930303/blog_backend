@@ -21,4 +21,12 @@ public interface BoardCommentRepository extends JpaRepository<BoardCommentEntity
             "WHERE c.commentId = :commentId " +
             "AND c.deleted = false")
     Optional<BoardCommentEntity> findByCommentIdAndDeletedFalse(@Param("commentId") Long commentId);
+
+
+    @Query("SELECT c FROM BoardCommentEntity c " +
+            "WHERE c.board.boardId = :boardId " +
+            "AND c.parent IS NULL " +
+            "AND c.deleted = false " +
+            "ORDER BY c.inputDate DESC, c.commentId DESC")
+    List<BoardCommentEntity> findRootCommentsByBoardId(@Param("boardId") Long boardId);
 }
