@@ -11,4 +11,6 @@ public class CommentRequestDTO {
     @Size(max = 500,message = "댓글은 500자를 초과할 수 없습니다.")
     private String content;
 
+    private Long parentId;
+
 }
