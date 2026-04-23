@@ -85,6 +85,8 @@ public class SecurityConfig {
                                 "/api/v1/oauth/kakao/url"  // 카카오 인증 URL
                         ).permitAll()
 
+                        .requestMatchers("/actuator/**").permitAll()
+
                         // ========================================================
                         // [GROUP 3] 인증이 '필수'인 기능 (Authenticated) - 먼저 선언!
                         // ========================================================
