@@ -9,6 +9,7 @@ import com.example.demo.entity.board.HashtagEntity;
 import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.board.BoardHashtagRepository;
 import com.example.demo.repository.board.BoardRepository;
+import com.example.demo.repository.board.BoardSummary;
 import com.example.demo.repository.board.HashtagRepository;
 import com.example.demo.repository.member.MemberRepository;
 import com.example.demo.service.file.FileService;
@@ -20,6 +21,9 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -52,6 +56,9 @@ public class BoardServiceImpl implements BoardService {
     private static final MutableDataSet OPTIONS = new MutableDataSet();
     private static final Parser MARKDOWN_PARSER = Parser.builder(OPTIONS).build();
     private static final HtmlRenderer HTML_RENDERER = HtmlRenderer.builder(OPTIONS).build();
+
+    private final RedisTemplate<String, String> redisTemplate;
+    private final BoardRedisService redisService;
 
     @Value("${upload.file.path}")
     private String uploadDir;
@@ -274,62 +281,67 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public void increaseView(Long boardId) {
-        boardRepository.increaseView(boardId);
+    public void increaseView(Long boardId, String clientIdentifier) {
+        redisService.increaseViewCount(boardId,clientIdentifier);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate,Long currentMemberId) {
+    public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate, Long currentMemberId) {
 
-        // 1. 요청된 크기보다 하나 더 가져와서 다음 페이지 존재 여부 확인 (size + 1)
-        int pageSize = size + 1;
-
-        if(cursorDate == null){
+        if (cursorDate == null) {
             cursorDate = LocalDateTime.now();
-            log.info("첫 페이지 조회: cursorDate를 현재 시간({})으로 설정했습니다. CursorId: {}", cursorDate, cursorId);
         }
-        // ⭐ 1. Repository는 BoardEntity 목록을 반환해야 합니다. (Service에서 DTO 변환)
-        // boards는 size + 1개의 Entity를 포함합니다.
-        List<BoardEntity> boards = boardRepository.findNextBoardsWithMember(cursorId, cursorDate,pageSize);
 
-        // 2. 다음 페이지 존재 여부 판단
-        boolean hasNext = boards.size() > size;
+        // 1. 오라클 11g 호환 네이티브 쿼리 호출 (size + 1개 요청)
+        int limitSize = size + 1;
+        List<BoardSummary> summaryList = boardRepository.findBoardListNative(cursorId, cursorDate, limitSize);
 
-        // 3. 실제 표시할 게시글 목록 (요청된 크기까지만)
-        // boards는 size + 1개이므로, subList(0, size)를 통해 size개만 contentEntities에 담깁니다.
-        List<BoardEntity> contentEntities = hasNext ? boards.subList(0, size) : boards;
+        // 2. 다음 페이지 존재 여부 확인
+        boolean hasNext = false;
+        if (summaryList.size() > size) {
+            hasNext = true;
+            summaryList.remove(size); // 마지막 확인용 1개 제거
+        }
 
-        // 4. Entity를 DTO로 변환
-        List<BoardResponse> contentDtos = contentEntities.stream()
-                .map(entity -> {
-                    Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
-                            boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
-                            return BoardResponse.fromEntity(entity,Collections.emptyList(), entity.getContentSummary(), isAuthor);
-                        })
-                .collect(Collectors.toList());
-        // 5. 다음 커서 값 설정
+        // 3. BoardSummary -> BoardResponse 변환
+        // (DTO 생성자를 호출하면 이미지 경로 변환 로직이 자동 실행됨)
+        List<BoardResponse> boardResponses = summaryList.stream()
+                .map(s -> new BoardResponse(
+                        s.getBoardId(),
+                        s.getTitle(),
+                        s.getContentSummary(),
+                        s.getNickname(),
+                        s.getFilePath(),
+                        s.getFileOriginalName(),
+                        s.getFileSize(),
+                        s.getInputDate(),
+                        s.getModifiedDate(),
+                        null, // content (리스트에선 안 씀)
+                        s.getViews(),
+                        s.getLikes(),
+                        s.getCategory(),
+                        null, // tags
+                        false // isAuthor
+                ))
+                .toList();
+
+        // 4. 다음 커서 계산
         Long nextCursorId = null;
         LocalDateTime nextCursorDate = null;
 
-        if (hasNext) {
-            // ⭐ 2. 커서 추출 로직 수정:
-            // 커서는 Repository에서 가져온 전체 목록(boards) 중
-            // 현재 페이지에 표시되지 않은 다음 항목 (인덱스 size)에서 추출해야 합니다.
-            BoardEntity cursorEntity = boards.get(size);
-
-            nextCursorId = cursorEntity.getBoardId();
-            nextCursorDate = cursorEntity.getInputDate();
+        if (!boardResponses.isEmpty()) {
+            BoardResponse lastBoard = boardResponses.get(boardResponses.size() - 1);
+            nextCursorId = lastBoard.boardId();
+            nextCursorDate = lastBoard.inputDate();
         }
 
-        // BoardListResponse DTO로 반환
         return new BoardListResponse(
-                contentDtos,
+                boardResponses,
                 hasNext,
                 nextCursorId,
                 nextCursorDate
         );
-
     }
 
     @Override

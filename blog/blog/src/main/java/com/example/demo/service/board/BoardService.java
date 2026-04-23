@@ -25,7 +25,7 @@ public interface BoardService {
 
     void deleteBoard(Long boardId, Long currentMemberId) throws AccessDeniedException;
 
-    void increaseView(Long boardId);
+    void increaseView(Long boardId, String clientIdentifier);
 
     BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate,Long currentMemberId);
 
