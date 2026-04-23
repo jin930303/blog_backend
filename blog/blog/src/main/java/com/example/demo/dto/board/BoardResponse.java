@@ -1,9 +1,7 @@
 package com.example.demo.dto.board;
 
 import com.example.demo.entity.board.BoardEntity;
-
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
@@ -12,63 +10,67 @@ public record BoardResponse(
         String title,
         String contentSummary,
         String nickname,
-        String filePath,
+        String filePath, // 💡 DB의 원본 파일명
         String fileOriginalName,
         Long fileSize,
         LocalDateTime inputDate,
         LocalDateTime modifiedDate,
-        String content,
+        String content, // 💡 리스트 조회시는 null
         int likes,
         int views,
         String category,
         List<String> tags,
-
         Boolean isAuthor
 ) {
     private static final String SERVER_BASE_URL = "http://localhost:8000";
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
 
-    // =========================================================================
-    // 💡 1. 오버로딩 메서드 추가 (List.stream().map()에서 사용)
-    // =========================================================================
-    // 1-1 태그가 없는 경우(기존 코드 호환용, 빈 리스트 처리)
-    public static BoardResponse fromEntity(BoardEntity entity, boolean isAuthor) {
-        // 목록 조회 시 엔티티의 Content를 그대로 사용하도록 합니다.
-        // 상세 조회 시에만 contentOverride를 사용하므로, 이 경우 null을 전달하여 엔티티의 내용을 사용하도록 위임합니다.
-        // 또는 contentOverride를 'Optional'로 만들어서 처리할 수 있지만, 여기서는 단순하게 entity.getContent()를 전달합니다.
-        return fromEntity(entity, Collections.emptyList(),entity.getContentSummary(),isAuthor);
-    }
-    //1-2 태그가 있는 경우
-    public static BoardResponse fromEntity(BoardEntity entity, List<String> tags,boolean isAuthor){
-        return fromEntity(entity,tags,entity.getContentSummary(),isAuthor);
-    }
-    //1-3 메인 변환 로직(내용 요약/전체구분 + 태그포함)
-    public static BoardResponse fromEntity(BoardEntity entity,List<String> tags,String contentOverrideOrSummary, boolean isAuthor){
-        String webFilePath = null;
-
-        if(entity.getFilePath() !=null && !entity.getFilePath().isEmpty()) {
-            String fileName = entity.getFilePath().substring(entity.getFilePath().lastIndexOf("\\") + 1);
-            webFilePath = SERVER_BASE_URL+"/upload/" + fileName;
+    // ✅ [핵심] 컴팩트 생성자
+    // JPQL 조회(new BoardResponse...)와 fromEntity 모두 이 로직을 거칩니다.
+    public BoardResponse {
+        // 이미지 경로 변환 로직
+        if (filePath != null && !filePath.isEmpty() && !filePath.startsWith("http")) {
+            String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+            filePath = SERVER_BASE_URL + "/upload/" + fileName;
         }
 
-        return  new BoardResponse(
+        // 태그 null 방지
+        if (tags == null) {
+            tags = Collections.emptyList();
+        }
+    }
+
+    // =========================================================================
+    // 💡 기존 서비스 코드 호환용 오버로딩 메서드들 (이게 없어서 에러가 났던 것!)
+    // =========================================================================
+
+    // 1. (Entity, Tags, Summary, isAuthor) - 4개 인자 받는 버전 (에러 해결용)
+    public static BoardResponse fromEntity(BoardEntity entity, List<String> tags, String summary, boolean isAuthor) {
+        return new BoardResponse(
                 entity.getBoardId(),
                 entity.getTitle(),
-                contentOverrideOrSummary,
+                summary, // 전달받은 요약 사용
                 entity.getNickname(),
-                webFilePath,
+                entity.getFilePath(),
                 entity.getFileOriginalName(),
                 entity.getFileSize(),
-                entity.getInputDate() !=null ? entity.getInputDate() : LocalDateTime.now(),
-                entity.getModifiedDate() !=null ? entity.getInputDate() : LocalDateTime.now(),
+                entity.getInputDate() != null ? entity.getInputDate() : LocalDateTime.now(),
+                entity.getModifiedDate() != null ? entity.getModifiedDate() : LocalDateTime.now(),
                 entity.getContent(),
                 entity.getLikes(),
                 entity.getViews(),
                 entity.getCategory(),
-                tags != null ? tags : Collections.emptyList(),
+                tags,
                 isAuthor
-
         );
     }
 
+    // 2. (Entity, Tags, isAuthor) - 3개 인자 버전
+    public static BoardResponse fromEntity(BoardEntity entity, List<String> tags, boolean isAuthor) {
+        return fromEntity(entity, tags, entity.getContentSummary(), isAuthor);
+    }
+
+    // 3. (Entity, isAuthor) - 2개 인자 버전 (태그 없을 때)
+    public static BoardResponse fromEntity(BoardEntity entity, boolean isAuthor) {
+        return fromEntity(entity, Collections.emptyList(), entity.getContentSummary(), isAuthor);
+    }
 }

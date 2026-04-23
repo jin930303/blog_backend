@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -125,12 +126,16 @@ public class BoardRestController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<BoardDetailResponse> detail(@PathVariable("boardId")Long boardId,@AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<BoardDetailResponse> detail(@PathVariable("boardId")Long boardId, @AuthenticationPrincipal CustomUserDetails details
+                                                        ,HttpServletRequest request){
 
         Long currentMemberId = (details != null)?details.getMemberId(): null;
 
         BoardEntity board = boardService.findBoardByIdExceptUser(boardId);
-        boardService.increaseView(boardId);
+
+        String clientIdentifier = (currentMemberId != null) ? String.valueOf(currentMemberId) : request.getRemoteAddr();
+
+        boardService.increaseView(boardId, clientIdentifier);
 
         Long authorId = board.getMember().getMemberId();
         boolean isAuthor = (currentMemberId != null) && currentMemberId.equals(authorId);
