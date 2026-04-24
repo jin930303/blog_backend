@@ -188,7 +188,7 @@ public class BoardRestController {
     public ResponseEntity<BoardListResponse> getBoardsByCursor(
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false,value = "cursorId")Long cursorId,
-            @RequestParam(required = false,value = "CursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate,
+            @RequestParam(required = false,value = "cursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate,
             @AuthenticationPrincipal CustomUserDetails details)
     {
         Long currentMemberId =(details != null) ? details.getMemberId() : null;
