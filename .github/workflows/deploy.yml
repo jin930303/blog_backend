@@ -22,10 +22,10 @@ jobs:
 
       # 2. Gradle 빌드 (테스트는 일단 제외하고 빌드 속도를 높입니다)
       - name: Grant execute permission for gradlew
-        run: chmod +x /blog/blog/gradlew
+        run: chmod +x blog/blog/gradlew
 
       - name: Build with Gradle
-        run: ./blog/blog/gradlew build -x test -p ./blog/blog
+        run: ./blog/blog/gradlew build -x test -p blog/blog
 
       # 3. Docker Hub 로그인 (등록한 Secrets 사용)
       - name: Login to Docker Hub
@@ -38,7 +38,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./blog/blog
+          context: blog/blog
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/semicolon-backend:latest
