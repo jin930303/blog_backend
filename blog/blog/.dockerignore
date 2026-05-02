@@ -1,0 +1,8 @@
+.git
+.gradle
+build
+bin
+out
+Dockerfile
+docker-compose.yml
+.env

@@ -1,72 +1,32 @@
-# ------------------------------------------------------------
-# IntelliJ IDEA
-# ------------------------------------------------------------
+# --- IDE ---
 .idea/
 *.iml
-*.iws
-*.ipr
-/out/
-/target/
-# IntelliJ local history (if using Windows)
-/system/
+.vscode/
 
-*.class.uniqueId*
-previous-compilation-data.bin
-problems-report.html
-
-# ------------------------------------------------------------
-# Gradle
-# ------------------------------------------------------------
-# Gradle wrapper files
+# --- Gradle & Build ---
+.gradle/
+**/build/
+**/out/
+**/bin/
 !gradle/wrapper/gradle-wrapper.jar
 
-# Build/temp directories
-/build/
-.gradle/
-/out/
-/target/
-/classes/
-/libs/
-/tmp/
-
-# ------------------------------------------------------------
-# Java/JVM files
-# ------------------------------------------------------------
-# Compiled classes
+# --- Java ---
 *.class
-
-# Log files
 *.log
+**/hs_err_pid*
 
-# Backup files
-*~
-# Virtual Machine error logs
-hs_err_pid*
+# --- Security & Environment ---
+.env
+.env.*
+*.properties
+!**/src/main/resources/application.properties
+# (중요: 보안이 필요한 properties 파일만 골라내거나, 아예 다 막고 원본만 허용하는 방식)
 
-# ------------------------------------------------------------
-# 기타
-# ------------------------------------------------------------
-# Windows/macOS generated files
-[Tt]humbs.db
+# --- OS ---
 .DS_Store
+[Tt]humbs.db
 
-# ------------------------------------------------------------
-# 불필요한 추가 파일
-# ------------------------------------------------------------
-
-# 압축 파일 (백업용 파일)
+# --- Others ---
 *.zip
 *.rar
-*.tar
-*.gz
-
-# 임시 및 메모 파일
-*.txt
-*.log
-
-# ------------------------------------------------------------
-# Front-end 관련 (만약 Back-end 프로젝트 내부에 있다면)
-# ------------------------------------------------------------
-# React/Node.js 프로젝트의 경우
-/Blog_Frontend/node_modules/
-/Blog_Frontend/build/
+*.tar.gz
