@@ -23,4 +23,6 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
 
     // 카카오
     Optional<MemberEntity> findByProviderId(String id);
+
+    Optional<MemberEntity> findByProviderAndProviderId(String provider, String providerId);
 }

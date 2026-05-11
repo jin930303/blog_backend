@@ -42,7 +42,8 @@ public class SecurityConfig {
                 "http://192.168.0.28:5500",
                 "http://192.168.0.3:5500",
                 "http://192.168.0.13:5500",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://accounts.google/com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -50,6 +51,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/**", configuration);
+        source.registerCorsConfiguration("/login/oauth2/**",configuration);
         return source;
     }
 
@@ -72,7 +74,7 @@ public class SecurityConfig {
                         // ========================================================
                         .requestMatchers(
                                 "/swagger-ui/**", "/v3/api-docs/**", "/index.html", "/",
-                                "/images/**", "/upload/**", "/board.html"
+                                "/images/**", "/upload/**", "/board.html","/error"
                         ).permitAll()
 
                         // ========================================================
@@ -83,10 +85,14 @@ public class SecurityConfig {
                                 "/api/v1/member",          // 회원가입
                                 "/api/v1/check/**",        // 중복 체크
                                 "/login/oauth2/code/kakao",// 카카오 리다이렉트
-                                "/api/v1/oauth/kakao/url"  // 카카오 인증 URL
+                                "/api/v1/oauth/kakao/url",  // 카카오 인증 URL
+                                "/api/v1/oauth/google/url", // 구글 인증 URL
+                                "/login/oauth2/code/google" // 구글 리다이렉트
+
                         ).permitAll()
 
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/api/v1/notifications/subscribe").permitAll()
 
                         // ========================================================
                         // [GROUP 3] 인증이 '필수'인 기능 (Authenticated) - 먼저 선언!

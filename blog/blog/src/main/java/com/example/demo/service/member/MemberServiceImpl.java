@@ -1,5 +1,6 @@
 package com.example.demo.service.member;
 
+import com.example.demo.dto.member.google.GoogleUserInfoDTO;
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.entity.member.MemberEntity;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class MemberServiceImpl implements MemberService{
@@ -98,6 +100,31 @@ public class MemberServiceImpl implements MemberService{
                 memberEntity.getRole(),         // 6. String (role)
                 memberEntity.getProvider(),     // 7. String (provider)
                 memberEntity.getProviderId()    // 8. String (providerId)
+        );
+    }
+
+    @Override
+    public String googleLoginOrSignupAndGetJwt(GoogleUserInfoDTO userinfo) {
+
+        MemberEntity member = memberRepository
+                .findByProviderAndProviderId("google",userinfo.getId())
+                .orElseGet(()->{
+                    MemberEntity newMember = MemberEntity.builder()
+                            .username("google_"+userinfo.getId())
+                            .password(UUID.randomUUID().toString())
+                            .nickname(userinfo.getNickname())
+                            .email(userinfo.getEmail())
+                            .role("ROLE_USER")
+                            .provider("google")
+                            .providerId(userinfo.getId())
+                            .build();
+                    return memberRepository.save(newMember);
+                });
+
+        return jwtTokenProvider.createToken(
+                member.getUsername(),
+                member.getRole(),
+                member.getNickname()
         );
     }
 }
