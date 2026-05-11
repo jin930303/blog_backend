@@ -6,7 +6,9 @@ import com.example.demo.dto.member.google.GoogleOAuthProperties;
 import com.example.demo.dto.member.google.GoogleUserInfoDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -86,6 +88,9 @@ public class GoogleOAuthService {
                 .build();
     }
 
+    @Value("${fronted.url}")
+    public String frontedUrl;
+
     public String processLoginAndGetRedirectUrl(String code){
         String accessToken = getAccessToken(code);
         GoogleUserInfoDTO userinfo = getGoogleUserInfo(accessToken);
@@ -94,7 +99,7 @@ public class GoogleOAuthService {
         String encodedNickname = URLEncoder.encode(
                 userinfo.getNickname(), StandardCharsets.UTF_8);
 
-        return "http://localhost:5173"
+        return frontedUrl
                 + "?token=" + jwtToken
                 + "&nickname=" +encodedNickname;
     }
