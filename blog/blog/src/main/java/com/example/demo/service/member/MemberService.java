@@ -1,5 +1,6 @@
 package com.example.demo.service.member;
 
+import com.example.demo.dto.member.google.GoogleUserInfoDTO;
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 
@@ -15,4 +16,6 @@ public interface MemberService {
     String socialLoginOrSignupAndGetJwt(KakaoUserInfoDTO userInfo);
 
     MemberDTO getMemberInfoById(Long memberId);
+
+    String googleLoginOrSignupAndGetJwt(GoogleUserInfoDTO userinfo);
 }

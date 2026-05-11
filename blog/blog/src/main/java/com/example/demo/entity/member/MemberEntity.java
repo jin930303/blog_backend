@@ -1,23 +1,25 @@
 package com.example.demo.entity.member;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @SequenceGenerator(
         name = "member",
         sequenceName = "member_seq",
         allocationSize = 1
 )
 @Table(name = "member")
+@Builder
 public class MemberEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "member")
     @Column
-    private long memberId;
+    private Long memberId;
 
     @Column
     private String username;
@@ -41,5 +43,4 @@ public class MemberEntity {
     private String providerId;
 
 
-    public MemberEntity() {}
 }
