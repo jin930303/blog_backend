@@ -3,6 +3,7 @@ package com.example.demo.controller.member;
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.service.member.KakaoOAuthService;
 import com.example.demo.service.member.MemberService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,9 @@ public class KakaoController {
         - 여기서 인가 코드를 받아서 KakaoOAuthService로 넘겨 토큰 교환하는 데 사용함
         - Security가 코드를 직접 처리는 안 하는데, 이거 요청한 엔드포인트를 막으면 403에러 바로 뜸
     */
+    @Value("${fronted.url}")
+    private String frontedUrl;
+
     @GetMapping("/login/oauth2/code/kakao")
     public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code) {
 
@@ -72,12 +76,11 @@ public class KakaoController {
 
 
             // 4. 자체 인증(JWT) 토큰 발급 후 프론트엔드의 메인 페이지로 리다이렉트
-            String frontendUrl = "http://localhost:5500/index.html"; // VS 서버 주소
             // 물음표는 URL에서 쿼리 문자열이 시작됨을 나타냄
             // token= 은 데이터의 key
             // jwtToken 은 데이터의 Value
             // & 를 사용하여 닉네임 파라미터 추가
-            String redirectUrl = frontendUrl
+            String redirectUrl = frontedUrl
                     + "?token=" + jwtToken
                     + "&nickname=" + encodeNickname;
 

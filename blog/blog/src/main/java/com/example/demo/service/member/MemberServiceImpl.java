@@ -33,7 +33,7 @@ public class MemberServiceImpl implements MemberService{
         entity.setPassword(encodedPassword);
         entity.setNickname(dto.getNickname());
         entity.setEmail(dto.getEmail());
-        entity.setRole("role_user");
+        entity.setRole("ROLE_USER");
 
         memberRepository.save(entity);
     }
@@ -77,7 +77,7 @@ public class MemberServiceImpl implements MemberService{
             // pw 기본이 null 허용 x라 임시 비밀번호를 SOCIAL_providerId로
             String tempPassword = "SOCIAL_" + userInfo.getId();
             entity.setPassword(passwordEncoder.encode(tempPassword));
-            entity.setRole("role_user");
+            entity.setRole("ROLE_USER");
 
             entity = memberRepository.save(entity);
         }
