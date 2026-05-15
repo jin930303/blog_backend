@@ -238,11 +238,12 @@ public class BoardRestController {
     public ResponseEntity<List<BoardResponse>> searchBoards(
             @RequestParam(value = "keyword",required = false) String keyword,
             @RequestParam(required = false,value = "tag") String tagName,
+            @RequestParam(required = false) Long lastBoardId,
             @AuthenticationPrincipal CustomUserDetails userDetails)
     {
         Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
         int limit = 20;
-        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,limit);
+        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId);
         return ResponseEntity.ok(result);
     }
 }
