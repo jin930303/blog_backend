@@ -58,11 +58,11 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
             "LEFT JOIN hashtag h ON bh.hashtag_id = h.hashtag_id " +
             "WHERE (:keyword IS NULL OR b.title LIKE :keyword OR b.content_summary LIKE :keyword) " +
             "AND (:tagName IS NULL OR h.name = :tagName) " +
-            "AND (:lastBoardId IS NULL OR b.board_id < :lastBoardId) " + // ✅ 커서 조건
+            "AND (:lastBoardId IS NULL OR b.board_id < :lastBoardId) " +
             "ORDER BY b.board_id DESC " +
             ") WHERE ROWNUM <= :size",
             nativeQuery = true)
-    List<Object[]> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName, @Param("lastBoardId")Long lastBoardId);
+    List<Object[]> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName, @Param("lastBoardId")Long lastBoardId,int size);
 
 
 
