@@ -241,7 +241,8 @@ public class BoardRestController {
             @AuthenticationPrincipal CustomUserDetails userDetails)
     {
         Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
-        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId);
+        int limit = 20;
+        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,limit);
         return ResponseEntity.ok(result);
     }
 }

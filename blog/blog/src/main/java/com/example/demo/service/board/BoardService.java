@@ -31,5 +31,5 @@ public interface BoardService {
 
     BoardEntity findBoardByIdExceptUser(Long boardId);
 
-    List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId);
+    List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId,int limit);
 }

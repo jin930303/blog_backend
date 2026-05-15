@@ -352,7 +352,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId) {
+    public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId, int limit) {
 
         String searchKeyword = null;
         if(keyword != null && !keyword.trim().isEmpty()){
@@ -364,14 +364,36 @@ public class BoardServiceImpl implements BoardService {
             searchTagName = tagName.trim();
         }
 
-        List<BoardEntity> boards = boardRepository.searchBoards(searchKeyword,searchTagName);
+        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,20);
 
-        return boards.stream()
-                .distinct()
-                .map(entity ->{
-                    Long authorId = (entity.getMember() != null) ? entity.getMember().getMemberId() : null;
-                    boolean isAuthor = (currentMemberId != null && authorId != null && currentMemberId.equals(authorId));
-                    return BoardResponse.fromEntity(entity,Collections.emptyList(),entity.getContentSummary(),isAuthor);
+        return rows.stream()
+                .map(row -> {
+                    Long boardId = ((Number) row[0]).longValue();
+                    String title = (String) row[1];
+                    String contentSummary = (String) row[2];
+                    String nickname = (String) row[3];
+                    String filePath = (String) row[4];
+                    String fileOriginalName = (String) row[5];
+                    Long fileSize = row[6] != null ? ((Number) row[6]).longValue() : null;
+                    LocalDateTime inputDate = row[7] != null
+                            ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : LocalDateTime.now();
+                    LocalDateTime modifiedDate = row[8] != null
+                            ? ((java.sql.Timestamp) row[8]).toLocalDateTime() : LocalDateTime.now();
+                    int likes = row[9] != null ? ((Number) row[9]).intValue() : 0;
+                    int views = row[10] != null ? ((Number) row[10]).intValue() : 0;
+                    String category = (String) row[11];
+                    Long authorId = row[12] != null ? ((Number) row[12]).longValue() : null;
+                    boolean isAuthor = currentMemberId != null && currentMemberId.equals(authorId);
+
+                    return new BoardResponse(
+                            boardId, title, contentSummary, nickname,
+                            filePath, fileOriginalName, fileSize,
+                            inputDate, modifiedDate,
+                            null,  // content 제외
+                            likes, views, category,
+                            Collections.emptyList(),
+                            isAuthor
+                    );
                 })
                 .toList();
     }
