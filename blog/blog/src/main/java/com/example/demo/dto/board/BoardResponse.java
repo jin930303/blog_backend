@@ -43,7 +43,7 @@ public record BoardResponse(
     // 💡 기존 서비스 코드 호환용 오버로딩 메서드들 (이게 없어서 에러가 났던 것!)
     // =========================================================================
 
-    // 1. (Entity, Tags, Summary, isAuthor) - 4개 인자 받는 버전 (에러 해결용)
+    // 1. (Entity, Tags, Summary, isAuthor) - 상세 조회용
     public static BoardResponse fromEntity(BoardEntity entity, List<String> tags, String summary, boolean isAuthor) {
         return new BoardResponse(
                 entity.getBoardId(),
@@ -63,6 +63,28 @@ public record BoardResponse(
                 isAuthor
         );
     }
+    // 목록/검색용 (content 제외)
+    public static BoardResponse fromEntitySummary(BoardEntity entity, List<String> tags, String summary, boolean isAuthor){
+        return new BoardResponse(
+                entity.getBoardId(),
+                entity.getTitle(),
+                summary,
+                entity.getNickname(),
+                entity.getFilePath(),
+                entity.getFileOriginalName(),
+                entity.getFileSize(),
+                entity.getInputDate() != null ? entity.getInputDate() : LocalDateTime.now(),
+                entity.getModifiedDate() !=null ? entity.getModifiedDate() : LocalDateTime.now(),
+                null,
+                entity.getLikes(),
+                entity.getViews(),
+                entity.getCategory(),
+                tags,
+                isAuthor
+
+        );
+    }
+
 
     // 2. (Entity, Tags, isAuthor) - 3개 인자 버전
     public static BoardResponse fromEntity(BoardEntity entity, List<String> tags, boolean isAuthor) {

@@ -46,14 +46,22 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
                                            @Param("cursorDate") LocalDateTime cursorDate,
                                            @Param("limitSize") int limitSize);
 
-    @Query("SELECT b FROM BoardEntity b " +
-            "LEFT JOIN FETCH b.member m " +
-            "LEFT JOIN b.boardHashtags bh " +
-            "LEFT JOIN bh.hashtag h " +
-            "WHERE (:keyword IS NULL OR b.title LIKE CONCAT('%' , :keyword , '%') OR b.content LIKE CONCAT('%', :keyword, '%')) " +
+    @Query(value = "SELECT board_id, title, content_summary, nickname, " +
+            "file_path, file_original_name, file_size, " +
+            "input_date, modified_date, likes, views, category, member_id " +
+            "FROM ( " +
+            "SELECT DISTINCT b.board_id, b.title, b.content_summary, b.nickname, " +
+            "b.file_path, b.file_original_name, b.file_size, " +
+            "b.input_date, b.modified_date, b.likes, b.views, b.category, b.member_id " +
+            "FROM board b " +
+            "LEFT JOIN board_hashtag bh ON b.board_id = bh.board_id " +
+            "LEFT JOIN hashtag h ON bh.hashtag_id = h.hashtag_id " +
+            "WHERE (:keyword IS NULL OR b.title LIKE :keyword OR b.content_summary LIKE :keyword) " +
             "AND (:tagName IS NULL OR h.name = :tagName) " +
-            "ORDER BY b.inputDate DESC")
-    List<BoardEntity> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName);
+            "ORDER BY b.input_date DESC " +
+            ") WHERE ROWNUM <= :limit",
+            nativeQuery = true)
+    List<Object[]> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName, @Param("limit")int limit);
 
 
 
