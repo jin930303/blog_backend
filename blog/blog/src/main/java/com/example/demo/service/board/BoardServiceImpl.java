@@ -363,8 +363,8 @@ public class BoardServiceImpl implements BoardService {
         if(tagName != null && !tagName.trim().isEmpty()){
             searchTagName = tagName.trim();
         }
-
-        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,lastBardId);
+        int size = 20;
+        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,lastBardId,size);
 
         return rows.stream()
                 .map(row -> {
