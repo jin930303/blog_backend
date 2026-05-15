@@ -352,7 +352,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId, int limit) {
+    public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId, Long lastBardId) {
 
         String searchKeyword = null;
         if(keyword != null && !keyword.trim().isEmpty()){
@@ -364,7 +364,7 @@ public class BoardServiceImpl implements BoardService {
             searchTagName = tagName.trim();
         }
 
-        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,20);
+        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,lastBardId);
 
         return rows.stream()
                 .map(row -> {
