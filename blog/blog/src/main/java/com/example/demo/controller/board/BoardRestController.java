@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -101,7 +102,7 @@ public class BoardRestController {
         }
     }
     @PostMapping
-    public ResponseEntity<Long> createBoard(@RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<Long> createBoard(@Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
 
         if(details == null){
             log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
@@ -152,7 +153,7 @@ public class BoardRestController {
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
 
         Long currentMemberId = details.getMemberId();
 
@@ -243,8 +244,15 @@ public class BoardRestController {
             @RequestParam(required = false) Long lastBoardId,
             @AuthenticationPrincipal CustomUserDetails userDetails)
     {
+        if(keyword != null && keyword.length() >100){
+            return ResponseEntity.badRequest().build();
+        }
+        if(tagName != null && tagName.length() >50){
+            return ResponseEntity.badRequest().build();
+        }
+
         Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
-        int limit = 20;
+//        int limit = 20;
         List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId);
         return ResponseEntity.ok(result);
     }
