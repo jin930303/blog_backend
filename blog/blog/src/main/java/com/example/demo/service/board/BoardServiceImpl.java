@@ -1,5 +1,6 @@
 package com.example.demo.service.board;
 
+import com.example.demo.document.BoardDocument;
 import com.example.demo.dto.board.BoardRequestDTO;
 import com.example.demo.dto.board.BoardListResponse;
 import com.example.demo.dto.board.BoardResponse;
@@ -21,8 +22,6 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +51,9 @@ public class BoardServiceImpl implements BoardService {
     //hashtag
     private final BoardHashtagRepository boardHashtagRepository;
     private final HashtagRepository hashtagRepository;
+
+    //ES
+    private final BoardSearchService boardSearchService;
 
     private static final MutableDataSet OPTIONS = new MutableDataSet();
     private static final Parser MARKDOWN_PARSER = Parser.builder(OPTIONS).build();
@@ -150,6 +152,15 @@ public class BoardServiceImpl implements BoardService {
             saveHashtags(saveEntity, boardRequestDTO.getTags());
         }
 
+        //ES 색인 추가 (해시태그 저장 후 다시 조회해서 색인)
+        try {
+            BoardEntity boardForIndex = boardRepository.findWithHashtagsById(saveEntity.getBoardId())
+                    .orElse(saveEntity);
+            boardSearchService.index(boardForIndex);
+        } catch (Exception e) {
+            log.error("[ES] 게시글 색인 실패 boardId={}: {}", saveEntity.getBoardId(), e.getMessage());
+        }
+
         return saveEntity.getBoardId();
     }
 
@@ -233,6 +244,15 @@ public class BoardServiceImpl implements BoardService {
         if(boardRequestDTO.getTags() != null){
             saveHashtags(board, boardRequestDTO.getTags());
         }
+        // ES 색인 업데이트
+        try {
+            BoardEntity boardForIndex = boardRepository.findWithHashtagsById(board.getBoardId())
+                    .orElse(board);
+            boardSearchService.index(boardForIndex);
+        } catch (Exception e) {
+            log.error("[ES] 게시글 색인 업데이트 실패 boardId={}: {}", board.getBoardId(), e.getMessage());
+        }
+
     }
 
     @Override
@@ -276,6 +296,14 @@ public class BoardServiceImpl implements BoardService {
             }
         }
         boardRepository.deleteById(boardId);
+
+        //ES 색인 삭제
+        try {
+            boardSearchService.delete(boardId);
+        } catch (Exception e) {
+            log.error("[ES] 게시글 색인 삭제 실패 boardId={}: {}", boardId, e.getMessage());
+        }
+
         log.info("게시글 ID 삭제 완료 {}",boardId);
     }
 
@@ -351,51 +379,80 @@ public class BoardServiceImpl implements BoardService {
         return entity;
     }
 
+    // 검색 메서드 ES로 전환
     @Override
     public List<BoardResponse> searchBoards(String keyword, String tagName, Long currentMemberId, Long lastBardId) {
 
-        String searchKeyword = null;
-        if(keyword != null && !keyword.trim().isEmpty()){
-            searchKeyword = "%" + keyword.trim()+"%";
-        }
-
-        String searchTagName = null;
-        if(tagName != null && !tagName.trim().isEmpty()){
-            searchTagName = tagName.trim();
-        }
+//        String searchKeyword = null;
+//        if(keyword != null && !keyword.trim().isEmpty()){
+//            searchKeyword = "%" + keyword.trim()+"%";
+//        }
+//
+//        String searchTagName = null;
+//        if(tagName != null && !tagName.trim().isEmpty()){
+//            searchTagName = tagName.trim();
+//        }
+//        int size = 20;
+//        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,lastBardId,size);
         int size = 20;
-        List<Object[]> rows = boardRepository.searchBoards(searchKeyword,searchTagName,lastBardId,size);
+        List<BoardDocument> docs;
 
-        return rows.stream()
-                .map(row -> {
-                    Long boardId = ((Number) row[0]).longValue();
-                    String title = (String) row[1];
-                    String contentSummary = (String) row[2];
-                    String nickname = (String) row[3];
-                    String filePath = (String) row[4];
-                    String fileOriginalName = (String) row[5];
-                    Long fileSize = row[6] != null ? ((Number) row[6]).longValue() : null;
-                    LocalDateTime inputDate = row[7] != null
-                            ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : LocalDateTime.now();
-                    LocalDateTime modifiedDate = row[8] != null
-                            ? ((java.sql.Timestamp) row[8]).toLocalDateTime() : LocalDateTime.now();
-                    int likes = row[9] != null ? ((Number) row[9]).intValue() : 0;
-                    int views = row[10] != null ? ((Number) row[10]).intValue() : 0;
-                    String category = (String) row[11];
-                    Long authorId = row[12] != null ? ((Number) row[12]).longValue() : null;
-                    boolean isAuthor = currentMemberId != null && currentMemberId.equals(authorId);
+        if(keyword != null && !keyword.trim().isEmpty()){
+            docs = boardSearchService.searchByKeyword(keyword.trim(),lastBardId,size);
+        } else if(tagName != null && !tagName.trim().isEmpty()){
+            docs = boardSearchService.searchByTag(tagName.trim(),lastBardId,size);
+        } else {
+            return Collections.emptyList();
+        }
 
-                    return new BoardResponse(
-                            boardId, title, contentSummary, nickname,
-                            filePath, fileOriginalName, fileSize,
-                            inputDate, modifiedDate,
-                            null,  // content 제외
-                            likes, views, category,
-                            Collections.emptyList(),
-                            isAuthor
-                    );
-                })
-                .toList();
+        return
+//                rows.stream()
+//                .map(row -> {
+//                    Long boardId = ((Number) row[0]).longValue();
+//                    String title = (String) row[1];
+//                    String contentSummary = (String) row[2];
+//                    String nickname = (String) row[3];
+//                    String filePath = (String) row[4];
+//                    String fileOriginalName = (String) row[5];
+//                    Long fileSize = row[6] != null ? ((Number) row[6]).longValue() : null;
+//                    LocalDateTime inputDate = row[7] != null
+//                            ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : LocalDateTime.now();
+//                    LocalDateTime modifiedDate = row[8] != null
+//                            ? ((java.sql.Timestamp) row[8]).toLocalDateTime() : LocalDateTime.now();
+//                    int likes = row[9] != null ? ((Number) row[9]).intValue() : 0;
+//                    int views = row[10] != null ? ((Number) row[10]).intValue() : 0;
+//                    String category = (String) row[11];
+//                    Long authorId = row[12] != null ? ((Number) row[12]).longValue() : null;
+//                    boolean isAuthor = currentMemberId != null && currentMemberId.equals(authorId);
+//
+//                    return new BoardResponse(
+//                            boardId, title, contentSummary, nickname,
+//                            filePath, fileOriginalName, fileSize,
+//                            inputDate, modifiedDate,
+//                            null,  // content 제외
+//                            likes, views, category,
+//                            Collections.emptyList(),
+//                            isAuthor
+//                    );
+//                })
+//                .toList();
+                docs.stream()
+                        .map(doc -> new BoardResponse(
+                                doc.getBoardId(),
+                                doc.getTitle(),
+                                doc.getContentSummary(),
+                                doc.getNickname(),
+                                null, null, null,
+                                doc.getInputDate(),
+                                doc.getModifiedDate(),
+                                null,
+                                doc.getLikes(),
+                                doc.getViews(),
+                                doc.getCategory(),
+                                doc.getHashtags(),
+                                false
+                        ))
+                        .toList();
     }
 
     @Override

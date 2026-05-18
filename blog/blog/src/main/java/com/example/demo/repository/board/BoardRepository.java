@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
 
@@ -69,4 +70,12 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
     @Modifying
     @Query("UPDATE BoardEntity b SET b.views = b.views + :increment WHERE b.boardId = :boardId")
     void addViews(@Param("boardId") long boardId, @Param("increment") long increment);
+
+    // 1. 단건 조회 시 해시태그 fetch join (작성/수정 후 ES 색인용)
+    @Query("SELECT b FROM BoardEntity b LEFT JOIN FETCH b.boardHashtags bh LEFT JOIN FETCH bh.hashtag WHERE b.boardId = :boardId")
+    Optional<BoardEntity> findWithHashtagsById(@Param("boardId") Long boardId);
+
+    // 2. 전체 조회 (bulk indexing용)
+    @Query("SELECT DISTINCT b FROM BoardEntity b LEFT JOIN FETCH b.boardHashtags bh LEFT JOIN FETCH bh.hashtag")
+    List<BoardEntity> findAllWithHashtags();
 }

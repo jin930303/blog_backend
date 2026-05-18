@@ -135,6 +135,7 @@ public class SecurityConfig {
                         // ========================================================
                         // [GROUP 5] 그 외 모든 요청
                         // ========================================================
+                        .requestMatchers("/api/v1/boards/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
