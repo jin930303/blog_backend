@@ -5,6 +5,7 @@ import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.entity.board.BoardHashtagEntity;
 import com.example.demo.repository.board.BoardHashtagRepository;
 import com.example.demo.service.board.BoardLikeService;
+import com.example.demo.service.board.BoardSearchService;
 import com.example.demo.service.board.BoardService;
 import com.example.demo.service.member.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,7 @@ public class BoardRestController {
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
     private final BoardHashtagRepository boardHashtagRepository;
+    private final BoardSearchService boardSearchService;
 
     // ⭐ 1. 새로운 인증 상태 확인 API 추가
     @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
@@ -245,5 +247,17 @@ public class BoardRestController {
         int limit = 20;
         List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId);
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "ES bulk indexing", description = "기존 DB 데이터를 Elasticsearch에 전체 색인합니다.")
+    @PostMapping("/admin/es-bulk-index")
+    public ResponseEntity<String> bulkIndex() {
+        try {
+            boardSearchService.bulkIndex();
+            return ResponseEntity.ok("ES bulk indexing 완료");
+        } catch (Exception e) {
+            log.error("[ES] bulk indexing 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("bulk indexing 실패: " + e.getMessage());
+        }
     }
 }
