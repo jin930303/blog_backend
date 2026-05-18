@@ -7,6 +7,7 @@ import com.example.demo.service.member.JwtTokenProvider;
 import com.example.demo.service.member.MemberService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,7 +34,7 @@ public class MemberRestController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
 
         // 1. 인증 객체 생성 및 검증
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -104,7 +105,19 @@ public class MemberRestController {
 //    }
 
     @PostMapping("/member")
-    public ResponseEntity<Map<String, String>> signup(@RequestBody MemberDTO dto) {
+    public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody MemberDTO dto) {
+
+        // 아이디 중복 체크 추가
+        if(memberService.checkUsername(dto.getUsername())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message","이미 사용 중인 아이디입니다."));
+        }
+
+        // 닉네임 중복 체크 추가
+        if(memberService.checkNickname(dto.getNickname())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message","이미 사용 중인 닉네임입니다."));
+        }
+
+
         memberService.signup_save(dto);
 
         Map<String, String> responseBody = new HashMap<>();

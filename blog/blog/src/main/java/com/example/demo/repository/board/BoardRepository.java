@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
 
-    @Query(value = "SELECT b FROM board b JOIN FETCH b.member ORDER BY b.board_id DESC",nativeQuery = true)
+    @Query(value = "SELECT b FROM BoardEntity b JOIN FETCH b.member ORDER BY b.boardId DESC")
     List<BoardEntity> findAllWithMember();
 
 //    @Modifying
@@ -63,7 +63,7 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
             "ORDER BY b.board_id DESC " +
             ") WHERE ROWNUM <= :size",
             nativeQuery = true)
-    List<Object[]> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName, @Param("lastBoardId")Long lastBoardId,int size);
+    List<Object[]> searchBoards(@Param("keyword") String keyword, @Param("tagName") String tagName, @Param("lastBoardId")Long lastBoardId,@Param("size") int size);
 
 
 
