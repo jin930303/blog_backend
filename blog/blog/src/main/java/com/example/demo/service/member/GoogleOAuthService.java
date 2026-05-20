@@ -91,17 +91,24 @@ public class GoogleOAuthService {
     @Value("${fronted.url}")
     public String frontedUrl;
 
-    public String processLoginAndGetRedirectUrl(String code){
+//    public String processLoginAndGetRedirectUrl(String code){
+//        String accessToken = getAccessToken(code);
+//        GoogleUserInfoDTO userinfo = getGoogleUserInfo(accessToken);
+//        String jwtToken = memberService.googleLoginOrSignupAndGetJwt(userinfo);
+//
+//        String encodedNickname = URLEncoder.encode(
+//                userinfo.getNickname(), StandardCharsets.UTF_8);
+//
+//        return frontedUrl
+//                + "?token=" + jwtToken
+//                + "&nickname=" +encodedNickname;
+//    }
+    public String[] processLoginAndGetRedirectUrl(String code){
         String accessToken = getAccessToken(code);
         GoogleUserInfoDTO userinfo = getGoogleUserInfo(accessToken);
         String jwtToken = memberService.googleLoginOrSignupAndGetJwt(userinfo);
-
-        String encodedNickname = URLEncoder.encode(
-                userinfo.getNickname(), StandardCharsets.UTF_8);
-
-        return frontedUrl
-                + "?token=" + jwtToken
-                + "&nickname=" +encodedNickname;
+        String encodeNickname = URLEncoder.encode(userinfo.getNickname(),StandardCharsets.UTF_8);
+        String redirectUrl = frontedUrl + "?nickname=" + encodeNickname;
+        return new String[]{redirectUrl,jwtToken};
     }
-
 }

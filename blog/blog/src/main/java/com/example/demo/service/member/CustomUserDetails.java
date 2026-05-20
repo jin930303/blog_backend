@@ -34,6 +34,8 @@ public class CustomUserDetails implements UserDetails {
         if(role == null){
             // Spring Security Role은 'ROLE_' 접두사 사용하는 것이 일반적입니다.
             role = "ROLE_USER";
+        } else{
+            role = role.toUpperCase();
         }
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
 
