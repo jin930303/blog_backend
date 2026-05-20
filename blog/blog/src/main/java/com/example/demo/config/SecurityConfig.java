@@ -95,7 +95,7 @@ public class SecurityConfig {
                         // ========================================================
                         // [GROUP 3] 인증이 '필수'인 기능 (Authenticated) - 먼저 선언!
                         // ========================================================
-                        .requestMatchers("/api/v1/boards/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/boards/admin/**").permitAll()
                         // 3-1. 게시글 쓰기/수정/삭제/이미지업로드/좋아요
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards/upload-image").authenticated()
