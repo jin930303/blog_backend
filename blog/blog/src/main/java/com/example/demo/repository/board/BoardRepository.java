@@ -28,7 +28,7 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
                 b.board_id AS boardId, 
                 b.title, 
                 b.content_summary AS contentSummary, 
-                m.nickname, 
+                b.nickname, 
                 b.file_path AS filePath, 
                 b.file_original_name AS fileOriginalName, 
                 b.file_size AS fileSize, 
@@ -38,7 +38,7 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
                 b.likes, 
                 b.category
             FROM board b
-            JOIN member m ON b.member_id = m.member_id
+            LEFT JOIN member m ON b.member_id = m.member_id
             WHERE (:cursorDate IS NULL OR b.input_date < :cursorDate OR (b.input_date = :cursorDate AND b.board_id < :cursorId))
             ORDER BY b.input_date DESC, b.board_id DESC
         ) WHERE ROWNUM <= :limitSize
