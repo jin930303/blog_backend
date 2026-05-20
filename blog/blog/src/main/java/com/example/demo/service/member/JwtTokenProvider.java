@@ -19,6 +19,9 @@ public class JwtTokenProvider {
     @Value("${jwt.secret-key}")
     private String seceretKeyString;
 
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
     private Key key;
 
     @PostConstruct
@@ -62,7 +65,7 @@ public class JwtTokenProvider {
         // 2. 보안 설정 적용하기
         // HttpOnly: JavaScript 접근 불가 -> 보안관련 공격 방어
         cookie.setHttpOnly(true);
-
+        cookie.setSecure(cookieSecure);
         // 쿠키가 전송될 경로 설정(모든 곳으로)
         cookie.setPath("/");
 

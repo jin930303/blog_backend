@@ -1,7 +1,6 @@
 package com.example.demo.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -14,16 +13,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     private static final String ACTUAL_UPLOAD_ROOT = "C:" + File.separator + "upload";
 
-    @Override
-    public void addCorsMappings(CorsRegistry corsRegistry){
-        corsRegistry.addMapping("/api/v1/**")
-                .allowedOrigins("http://172.30.1.9:5500", "http://localhost:5500","http://172.30.1.26:5500","http://localhost:5173")
-                .allowedMethods("GET", "POST", "PUT", "DELETE","OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-
-    }
+//    @Override
+//    public void addCorsMappings(CorsRegistry corsRegistry){
+//        corsRegistry.addMapping("/api/v1/**")
+//                .allowedOrigins("http://172.30.1.9:5500", "http://localhost:5500","http://172.30.1.26:5500","http://localhost:5173")
+//                .allowedMethods("GET", "POST", "PUT", "DELETE","OPTIONS")
+//                .allowedHeaders("*")
+//                .allowCredentials(true)
+//                .maxAge(3600);
+//
+//    }
 
 
 

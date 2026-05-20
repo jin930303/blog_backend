@@ -34,19 +34,17 @@ public class SecurityConfig {
 
         // 허용할 출처 목록 (프론트엔드 주소들)
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://127.0.0.1:5500",
-                "http://localhost:5500",
-                "http://172.30.1.9:5500",
-                "http://192.168.0.8:5500",
-                "http://192.168.0.28:5500",
-                "http://192.168.0.3:5500",
-                "http://192.168.0.13:5500",
                 "http://localhost:3000",
-                "https://accounts.google/com"
+                "http://localhost:5173"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Collections.singletonList("*"));
+       configuration.setAllowedHeaders(Arrays.asList(
+               "Authorization",
+               "Content-Type",
+               "X-Requested-With",
+               "Cookie"
+       ));
+        configuration.setExposedHeaders(Arrays.asList("Set-Cookie"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -58,7 +56,7 @@ public class SecurityConfig {
     // 2. Security Filter Chain 설정
     @Bean
     @Order(1)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, RateLimitingFilter rateLimitingFilter) throws Exception {
         http
                 // 기본 설정 (CORS, CSRF, 세션 등)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -97,7 +95,7 @@ public class SecurityConfig {
                         // ========================================================
                         // [GROUP 3] 인증이 '필수'인 기능 (Authenticated) - 먼저 선언!
                         // ========================================================
-
+                        .requestMatchers("/api/v1/boards/admin/**").hasRole("ADMIN")
                         // 3-1. 게시글 쓰기/수정/삭제/이미지업로드/좋아요
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards/upload-image").authenticated()
@@ -119,7 +117,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/test/**").authenticated()
 
                         // 3-54 마이페이지
-                        .requestMatchers("/api/v1/mypage/*").authenticated()
+                        .requestMatchers("/api/v1/mypage","/api/v1/mypage/*").authenticated()
 
                         // ========================================================
                         // [GROUP 4] 조회 기능 (누구나 접근 가능) - 나중에 선언!
@@ -135,12 +133,15 @@ public class SecurityConfig {
                         // ========================================================
                         // [GROUP 5] 그 외 모든 요청
                         // ========================================================
-                        .requestMatchers("/api/v1/boards/admin/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
 
                 // JWT 필터 추가
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // * 필터 순서 : RateLimiting -> JWT 순으로 적용
+                // RateLimiting이 먼저 차단해야 JWT 파싱 비용도 절약
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter,RateLimitingFilter.class);
 
         return http.build();
     }
