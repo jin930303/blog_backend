@@ -23,7 +23,7 @@ public class CustomUserService implements UserDetailsService {
 
         String role = memberEntity.getRole();
         if(role == null){
-            role = "role_user";
+            role = "ROLE_USER";
         }
         System.out.println("조회된 memberId: " + memberEntity.getMemberId());
 

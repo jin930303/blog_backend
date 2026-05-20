@@ -1,8 +1,10 @@
 package com.example.demo.controller.member;
 
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
+import com.example.demo.service.member.JwtTokenProvider;
 import com.example.demo.service.member.KakaoOAuthService;
 import com.example.demo.service.member.MemberService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,10 +22,12 @@ import java.util.Map;
 public class KakaoController {
     private final KakaoOAuthService kakaoOAuthService;
     private final MemberService memberService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public KakaoController(KakaoOAuthService kakaoOAuthService, MemberService memberService) {
+    public KakaoController(KakaoOAuthService kakaoOAuthService, MemberService memberService, JwtTokenProvider jwtTokenProvider) {
         this.kakaoOAuthService = kakaoOAuthService;
         this.memberService = memberService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     // 로그인 시작 URL 제공
@@ -47,7 +51,7 @@ public class KakaoController {
     private String frontedUrl;
 
     @GetMapping("/login/oauth2/code/kakao")
-    public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code) {
+    public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) {
 
         try {
             // 1. 인가 코드로 액세스 토큰 발급
@@ -70,10 +74,12 @@ public class KakaoController {
 
             // 3. 사용자 정보(userInfo)를 기반으로 서비스 회원가입/로그인 처리 (TODO: MemberService 호출)
             String jwtToken = memberService.socialLoginOrSignupAndGetJwt(userInfo);
-            String userNickname = userInfo.getNickname(); // 카카오에서 받은 닉네임
+//            String userNickname = userInfo.getNickname(); // 카카오에서 받은 닉네임
 
-            String encodeNickname = URLEncoder.encode(userNickname, StandardCharsets.UTF_8.toString());
+            String encodeNickname = URLEncoder.encode(userInfo.getNickname(), StandardCharsets.UTF_8.toString());
 
+            //쿠키에 토큰 심기
+            jwtTokenProvider.addTokenToCookie(response,jwtToken);
 
             // 4. 자체 인증(JWT) 토큰 발급 후 프론트엔드의 메인 페이지로 리다이렉트
             // 물음표는 URL에서 쿼리 문자열이 시작됨을 나타냄
@@ -81,8 +87,8 @@ public class KakaoController {
             // jwtToken 은 데이터의 Value
             // & 를 사용하여 닉네임 파라미터 추가
             String redirectUrl = frontedUrl
-                    + "?token=" + jwtToken
-                    + "&nickname=" + encodeNickname;
+//                    + "?token=" + jwtToken
+                    + "?nickname=" + encodeNickname;
 
             return ResponseEntity.status(HttpStatus.FOUND) // HTTP 302 Found 응답
                     .header(HttpHeaders.LOCATION, redirectUrl)

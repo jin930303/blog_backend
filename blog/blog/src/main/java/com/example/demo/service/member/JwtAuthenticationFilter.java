@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -30,6 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         for (Cookie cookie : request.getCookies()) {
             // JwtTokenProvider에서 설정한 쿠키 이름인 "accessToken"을 사용합니다.
             if ("accessToken".equals(cookie.getName())) {
+                String value = cookie.getValue();
+
+                log.debug("accessToken 반환 값: [{}]", value);
+                log.debug("accessToken 길이: {}", value != null ? value.length() : 0);
                 return cookie.getValue();
             }
         }
@@ -42,12 +47,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                log.debug("쿠키 확인: name={}, value={}",cookie.getName(),cookie.getValue());
+            }
+        } else {
+            log.warn("요청에 쿠키가 없습니다. URI={}", request.getRequestURI());
+        }
         // 1. Authorization 헤더에서 토큰을 추출 (기존 방식 유지 - 혹시 모를 Bearer 토큰 요청 대비)
         String token = null;
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7).trim();
+            String extracted = header.substring(7).trim();
+            if(!extracted.isEmpty()){
+                token =extracted;
+            }
+//            token = header.substring(7).trim();
+
         }
 
         // 2. Authorization 헤더에 토큰이 없으면 HttpOnly 쿠키에서 토큰을 추출 (⭐ 핵심 수정 ⭐)
@@ -56,6 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (token != null) {
+            log.debug("파싱할 토큰 : [{}]",token);
             try {
                 // 토큰 유효성 검사 및 클레임 파싱
                 Claims claims = jwtTokenProvider.parseClaims(token);
@@ -74,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } catch (Exception e) {
                 // 토큰이 유효하지 않은 경우 (만료, 변조 등)
-                logger.warn("JWT 인증 실패: {}" + e.getMessage());
+                log.warn("JWT 인증 실패: {}" , e.getMessage());
             }
         }
 

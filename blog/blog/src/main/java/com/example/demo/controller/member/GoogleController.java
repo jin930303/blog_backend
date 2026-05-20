@@ -1,6 +1,8 @@
 package com.example.demo.controller.member;
 
 import com.example.demo.service.member.GoogleOAuthService;
+import com.example.demo.service.member.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +20,7 @@ import java.util.Map;
 public class GoogleController {
 
     private final GoogleOAuthService googleOAuthService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/api/v1/oauth/google/url")
     public ResponseEntity<Map<String,String>> getGoogleAuthUrl(){
@@ -27,9 +30,14 @@ public class GoogleController {
     }
 
     @GetMapping("/login/oauth2/code/google")
-    public ResponseEntity<?> googleCallback(@RequestParam("code") String code){
+    public ResponseEntity<?> googleCallback(@RequestParam("code") String code, HttpServletResponse response){
         try{
-            String redirectUrl = googleOAuthService.processLoginAndGetRedirectUrl(code);
+//            String redirectUrl = googleOAuthService.processLoginAndGetRedirectUrl(code);
+            String[] result = googleOAuthService.processLoginAndGetRedirectUrl(code);
+            String redirectUrl = result[0];
+            String jwtToken = result[1];
+            jwtTokenProvider.addTokenToCookie(response,jwtToken);
+
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header(HttpHeaders.LOCATION,redirectUrl)
                     .build();

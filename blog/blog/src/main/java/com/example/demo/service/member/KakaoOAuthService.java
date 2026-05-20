@@ -4,7 +4,12 @@ import com.example.demo.dto.member.kakao.KakaoOAuthProperties;
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @Service
 public class KakaoOAuthService {
@@ -26,15 +31,25 @@ public class KakaoOAuthService {
 
     // 인가 코드(code)를 사용해 카카오한테 액세스 토큰 발급받기
     public String getAccessToken(String code) {
-        // 🚨 실제 구현에서는 에러 처리 로직이 추가되어야 합니다.
+//        // 🚨 실제 구현에서는 에러 처리 로직이 추가되어야 합니다.
+
+        MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type","authorization_code");
+        params.add("client_id",kakaoProperties.getClientId());
+        params.add("redirect_uri",kakaoProperties.getRedirectUri());
+        params.add("code",code);
         JsonNode responseNode = webClient.post()
                 .uri(kakaoProperties.getTokenUri())
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .bodyValue("grant_type=authorization_code" +
-                        "&client_id=" + kakaoProperties.getClientId() +
-                        "&redirect_uri=" + kakaoProperties.getRedirectUri() +
-                        "&code=" + code)
+//                .bodyValue("grant_type=authorization_code" +
+//                        "&client_id=" + kakaoProperties.getClientId() +
+//                        "&redirect_uri=" + kakaoProperties.getRedirectUri() +
+//                        "&code=" + code)
+                .bodyValue(params)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError(), clientResponse -> clientResponse.bodyToMono(String.class)
+                        .doOnNext(body -> System.out.println("카카오 에러 응답: "+body))
+                        .then(Mono.error(new RuntimeException("카카오 400 에러"))))
                 .bodyToMono(JsonNode.class)
                 .block(); // 블로킹 방식으로 응답 대기
 
@@ -73,9 +88,16 @@ public class KakaoOAuthService {
         if (userInfo.has("kakao_account")) {
             JsonNode kakaoAccount = userInfo.get("kakao_account");
             // 이메일 동의 항목에 따라 'email' 필드의 존재 여부가 달라집니다.
-            if (kakaoAccount.has("email_needs_agreement") && kakaoAccount.get("email_needs_agreement").asBoolean() == false) {
+//            if (kakaoAccount.has("email_needs_agreement") && kakaoAccount.get("email_needs_agreement").asBoolean() == false) {
+//                email = kakaoAccount.get("email").asText();
+//            }
+            if(kakaoAccount.has("email")){
                 email = kakaoAccount.get("email").asText();
             }
+
+        }
+        if(email == null){
+            email = "kakao_"+id+"@kakao.com";
         }
 
         // ⭐️ KakaoUserInfoDto 객체를 생성하여 반환합니다.
