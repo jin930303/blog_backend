@@ -316,7 +316,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public BoardListResponse getBoardsWithCursor(int size, Long cursorId, LocalDateTime cursorDate, Long currentMemberId) {
-
+        log.debug("커서 조회 - cursorId={}, cursorDate={}, size={}", cursorId, cursorDate, size);
         if (cursorDate == null) {
             cursorDate = LocalDateTime.now();
         }
