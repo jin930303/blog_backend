@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -82,6 +84,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = customUserService.loadUserByUsername(username);
 
                 if (userDetails != null) {
+
+                    if(!userDetails.isAccountNonLocked()){
+                        log.warn("[AUTH] 차단된 회원 요청 거부 - username={} URI={}",username,request.getRequestURI());
+                        sendBlockedResponse(response);
+                        return;
+                    }
+
                     // 인증 객체 생성 및 SecurityContext에 저장
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -99,4 +108,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
 
     }
+
+    private void sendBlockedResponse(HttpServletResponse response) throws IOException{
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+                "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"차단된 계정입니다. 관리자에게 문의하세요.\"}"
+        );
+    }
+
 }

@@ -22,12 +22,14 @@ public class CustomUserDetails implements UserDetails {
     private final String nickname;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
+    private final boolean blocked;
 
     public CustomUserDetails(MemberEntity memberEntity) {
         this.memberId = memberEntity.getMemberId();
         this.username = memberEntity.getUsername();
         this.password = memberEntity.getPassword();
         this.nickname = memberEntity.getNickname();
+        this.blocked = memberEntity.isBlocked();
 
         // 권한 설정
         String role = memberEntity.getRole();
@@ -64,7 +66,7 @@ public class CustomUserDetails implements UserDetails {
     public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { return !blocked; }
 
     @Override
     public boolean isCredentialsNonExpired() { return true; }

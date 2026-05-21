@@ -42,5 +42,22 @@ public class MemberEntity {
     @Column
     private String providerId;
 
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String status ="ACTIVE";
+
+    public void block(){
+        this.status="BLOCKED";
+    }
+
+    public void unblock(){
+        this.status="ACTIVE";
+    }
+
+    public boolean isBlocked(){
+        return "BLOCKED".equals(this.status);
+    }
+
+
 
 }

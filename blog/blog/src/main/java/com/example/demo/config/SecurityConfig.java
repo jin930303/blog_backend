@@ -116,8 +116,10 @@ public class SecurityConfig {
                         // 3-4. 테스트용 (필요시 제거)
                         .requestMatchers("/api/v1/test/**").authenticated()
 
-                        // 3-54 마이페이지
+                        // 3-5 마이페이지
                         .requestMatchers("/api/v1/mypage","/api/v1/mypage/*").authenticated()
+                        // 3-6 신고
+                        .requestMatchers(HttpMethod.POST,"/api/v1/reports/**").authenticated()
 
                         // ========================================================
                         // [GROUP 4] 조회 기능 (누구나 접근 가능) - 나중에 선언!
