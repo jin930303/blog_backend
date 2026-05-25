@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,35 +37,46 @@ public class MemberRestController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
+        try {
+            // 1. 인증 객체 생성 및 검증
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
 
-        // 1. 인증 객체 생성 및 검증
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+            // 2. 인증 객체에서 CustomUserDetails 추출
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        // 2. 인증 객체에서 CustomUserDetails 추출
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            // 3. 토큰 생성에 필요한 정보 추출
+            String username = userDetails.getUsername();
+            String role = userDetails.getAuthorities().iterator().next().getAuthority();
+            String nickname = memberService.getNicknameByUsername(username);
 
-        // 3. 토큰 생성에 필요한 정보 추출
-        String username = userDetails.getUsername();
-        String role = userDetails.getAuthorities().iterator().next().getAuthority();
-        String nickname = memberService.getNicknameByUsername(username);
+            // 4. JWT 토큰 생성
+            String jwtToken = jwtTokenProvider.createToken(username, role, nickname); // 토큰 생성
 
-        // 4. JWT 토큰 생성
-        String jwtToken = jwtTokenProvider.createToken(username, role, nickname); // 토큰 생성
+            // 쿠키 보안 강화하기 HttpOnly
+            jwtTokenProvider.addTokenToCookie(response, jwtToken);
 
-        // 쿠키 보안 강화하기 HttpOnly
-        jwtTokenProvider.addTokenToCookie(response, jwtToken);
 
-        // 5. 응답 구성
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("username", username);
-        responseBody.put("nickname", nickname);
-        responseBody.put("message", "로그인 성공");
-        // responseBody.put("token", jwtToken); // 토큰을 응답 바디에 포함
+            // 5. 응답 구성
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("username", username);
+            responseBody.put("nickname", nickname);
+            responseBody.put("userRole", role);
+            responseBody.put("message", "로그인 성공");
+            // responseBody.put("token", jwtToken); // 토큰을 응답 바디에 포함
 
-        return ResponseEntity.ok(responseBody);
+            return ResponseEntity.ok(responseBody);
+        } catch (LockedException e){
+            //차단된 계정
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","차단된 계정입니다. 관리자에게 문의하세요"));
+        } catch (BadCredentialsException e){
+            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message","아이디 또는 비밀번호가 일치하지 않습니다."));
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message","로그인 처리 중 오류가 발생했습니다."));
+        }
+
     }
 
     @PostMapping("/logout")

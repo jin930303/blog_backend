@@ -1,5 +1,6 @@
 package com.example.demo.service.admin;
 
+import com.example.demo.dto.report.AdminReportResponseDTO;
 import com.example.demo.entity.board.BoardCommentEntity;
 import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.entity.member.MemberEntity;
@@ -80,6 +81,7 @@ public class AdminServiceImpl implements AdminService {
         // 3. 게시글 하드 딜리트
         boardRepository.deleteById(boardId);
         log.warn("[ADMIN] 게시글 강제 삭제 완료 - boardId={}",boardId);
+        reportRepository.findAllByBoardId(boardId).forEach(ReportEntity :: markContentDeleted);
 
         // 4. ES 색인 삭제
         try{
@@ -98,6 +100,8 @@ public class AdminServiceImpl implements AdminService {
         // 기존 방식과 동일하게 소프트 딜리트
         comment.setDeleted(true);
         commentRepository.save(comment);
+
+        reportRepository.findAllByCommentId(commentId).forEach(ReportEntity::markContentDeleted);
         log.warn("[ADMIN] 댓글 강제 삭제 완료 commentId ={}",commentId);
 
     }
@@ -120,6 +124,20 @@ public class AdminServiceImpl implements AdminService {
         member.unblock();
         log.info("[ADMIN] 회원 차단 해제 memberId ={}, username={}",memberId,member.getUsername());
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdminReportResponseDTO> getAllReports() {
+        return reportRepository.findAll().stream()
+                .map(report -> {
+                    MemberEntity target = memberRepository.findById(report.getTargetId())
+                            .orElseThrow(()-> new IllegalArgumentException("회원 없음"));
+                    MemberEntity reporter = memberRepository.findById(report.getReporterId())
+                            .orElseThrow(()-> new IllegalArgumentException("신고자 없음"));
+                    return AdminReportResponseDTO.of(report,target,reporter);
+                })
+                .toList();
     }
 
     // 신고 내역 조회

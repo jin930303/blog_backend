@@ -37,6 +37,10 @@ public class ReportEntity {
     @Column(name = "created_at",nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted",nullable = false)
+    private boolean deleted = false;
+
+
     @Builder
     public ReportEntity(Long reporterId, Long targetId, String reason, Long boardId, Long commentId){
         this.reporterId = reporterId;
@@ -44,6 +48,18 @@ public class ReportEntity {
         this.reason = reason;
         this.boardId = boardId;
         this.commentId = commentId;
-        this.createdAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    public void prePersist(){
+        if(this.createdAt == null){
+            this.createdAt = LocalDateTime.now();
+        }
+        if(!this.deleted){
+            this.deleted = false;
+        }
+    }
+    public void markContentDeleted(){
+        this.deleted=true;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.demo.service.admin;
 
+import com.example.demo.dto.report.AdminReportResponseDTO;
 import com.example.demo.entity.report.ReportEntity;
 
 import java.util.List;
@@ -16,4 +17,6 @@ public interface AdminService {
     void report(Long memberId, Long targetId, String reason, Long boardId, Long commentId);
 
     void unblockMember(Long memberId);
+
+    List<AdminReportResponseDTO> getAllReports();
 }

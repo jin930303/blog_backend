@@ -12,4 +12,8 @@ public interface ReportRepository extends JpaRepository<ReportEntity , Long> {
 
     // 특정 회원이 신고당한 횟수
     long countByTargetId(Long targetId);
+
+    List<ReportEntity> findAllByBoardId(Long boardId);
+
+    List<ReportEntity> findAllByCommentId(Long commentId);
 }
