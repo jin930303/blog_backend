@@ -8,36 +8,29 @@ import com.example.demo.service.member.MemberService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class MemberRestController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
 
-    public MemberRestController(MemberService memberService, JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager) {
-        this.memberService = memberService;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.authenticationManager = authenticationManager;
-    }
-
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
-        try {
+
             // 1. 인증 객체 생성 및 검증
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
@@ -60,22 +53,21 @@ public class MemberRestController {
 
 
             // 5. 응답 구성
-            Map<String, String> responseBody = new HashMap<>();
-            responseBody.put("username", username);
-            responseBody.put("nickname", nickname);
-            responseBody.put("userRole", role);
-            responseBody.put("message", "로그인 성공");
+        return ResponseEntity.ok(Map.of(
+                "username",username,
+                "nickname",nickname,
+                "userRole",role,
+                "message","로그인 성공"
+        ));
+//            Map<String, String> responseBody = new HashMap<>();
+//            responseBody.put("username", username);
+//            responseBody.put("nickname", nickname);
+//            responseBody.put("userRole", role);
+//            responseBody.put("message", "로그인 성공");
             // responseBody.put("token", jwtToken); // 토큰을 응답 바디에 포함
 
-            return ResponseEntity.ok(responseBody);
-        } catch (LockedException e){
-            //차단된 계정
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","차단된 계정입니다. 관리자에게 문의하세요"));
-        } catch (BadCredentialsException e){
-            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message","아이디 또는 비밀번호가 일치하지 않습니다."));
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message","로그인 처리 중 오류가 발생했습니다."));
-        }
+
+
 
     }
 
@@ -90,9 +82,9 @@ public class MemberRestController {
         // 2. 응답에 쿠키를 추가하여 브라우저에 삭제 명령 전달
         response.addCookie(cookie);
 
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "로그아웃 성공. 쿠키가 삭제되었습니다.");
-        return ResponseEntity.ok(responseBody);
+//        Map<String, String> responseBody = new HashMap<>();
+//        responseBody.put("message", "로그아웃 성공. 쿠키가 삭제되었습니다.");
+        return ResponseEntity.ok(Map.of("messge","로그아웃 성공. 쿠키가 삭제되었습니다."));
     }
 
 //    @PostMapping("/login")
@@ -133,12 +125,12 @@ public class MemberRestController {
 
         memberService.signup_save(dto);
 
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "회원가입 성공");
-        responseBody.put("username", dto.getUsername()); // ID 대신 username 반환
+//        Map<String, String> responseBody = new HashMap<>();
+//        responseBody.put("message", "회원가입 성공");
+//        responseBody.put("username", dto.getUsername()); // ID 대신 username 반환
 
-        return ResponseEntity.status(201)
-                .body(responseBody);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message","회원가입 성공","username",dto.getUsername()));
     }
 
     @PostMapping("/check/id")
@@ -168,10 +160,10 @@ public class MemberRestController {
     @GetMapping("/mypage")
     public ResponseEntity<Map<String, Object>> mypage(
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        Map<String, Object> responseBody = new HashMap<>();
-
-        if (customUserDetails != null) {
-            try {
+//        Map<String, Object> responseBody = new HashMap<>();
+//
+//        if (customUserDetails != null) {
+//            try {
                 // 1. JWT에서 가져온 정보 memberId, username
                 Long memberId = customUserDetails.getMemberId();
                 String username = customUserDetails.getUsername();
@@ -179,21 +171,25 @@ public class MemberRestController {
                 // 2. DB에서 추가 정보 조회 하기
                 MemberDTO memberDTO = memberService.getMemberInfoById(memberId);
 
-                responseBody.put("memberId", memberId);
-                responseBody.put("username", username);
-                responseBody.put("nickname", memberDTO.getNickname());
-                responseBody.put("email", memberDTO.getEmail());
-                responseBody.put("message", "마이페이지 정보 조회 성공.");
-                return ResponseEntity.ok(responseBody);
+//                responseBody.put("memberId", memberId);
+//                responseBody.put("username", username);
+//                responseBody.put("nickname", memberDTO.getNickname());
+//                responseBody.put("email", memberDTO.getEmail());
+//                responseBody.put("message", "마이페이지 정보 조회 성공.");
+                return ResponseEntity.ok(Map.of("memberId",memberId,
+                        "username",username,
+                        "nickname",memberDTO.getNickname(),
+                        "email",memberDTO.getEmail(),
+                        "message","마이페이지 정보 조회 성공"));
 
-            } catch (Exception e) {
-                // DB 조회 또는 데이터 처리 오류
-                responseBody.put("message", "사용자 정보 조회 중 오류 발생");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
-            }
-        } else {
-            responseBody.put("message", "로그인 세션이 유효하지 않음");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-        }
+//            } catch (Exception e) {
+//                // DB 조회 또는 데이터 처리 오류
+//                responseBody.put("message", "사용자 정보 조회 중 오류 발생");
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+//            }
+//        } else {
+//            responseBody.put("message", "로그인 세션이 유효하지 않음");
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+//        }
     }
 }
