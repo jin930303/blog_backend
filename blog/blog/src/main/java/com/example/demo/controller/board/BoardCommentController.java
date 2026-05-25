@@ -26,8 +26,8 @@ public class BoardCommentController {
     public ResponseEntity<List<CommentResponseDTO>> getComments (@PathVariable Long boardId){
         log.info("댓글 목록 조회 요청 - boardId : {}",boardId);
 
-        List<CommentResponseDTO> comments = commentService.getCommentList(boardId);
-        return ResponseEntity.ok(comments);
+//        List<CommentResponseDTO> comments = commentService.getCommentList(boardId);
+        return ResponseEntity.ok(commentService.getCommentList(boardId));
     }
 
     @PostMapping
@@ -35,16 +35,17 @@ public class BoardCommentController {
             @PathVariable Long boardId , @Valid @RequestBody CommentRequestDTO requestDTO){
 
         log.info("댓글 작성 요청- boardId :{}, content : {}",boardId,requestDTO.getContent());
-        try{
-            CommentResponseDTO response = commentService.createComment(boardId,requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IllegalStateException e){
-            log.error("댓글 작성 실패 - 인증 오류 : {}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (IllegalArgumentException e){
-            log.error("댓글 작성 실패 - 잘못된 요청 : {}",e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+//        try{
+//            CommentResponseDTO response = commentService.createComment(boardId,requestDTO);
+//            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//        } catch (IllegalStateException e){
+//            log.error("댓글 작성 실패 - 인증 오류 : {}",e.getMessage());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        } catch (IllegalArgumentException e){
+//            log.error("댓글 작성 실패 - 잘못된 요청 : {}",e.getMessage());
+//            return ResponseEntity.badRequest().build();
+//        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.createComment(boardId,requestDTO));
     }
 
     @PutMapping("/{commentId}")
@@ -54,16 +55,17 @@ public class BoardCommentController {
             @Valid @RequestBody CommentRequestDTO requestDTO){
 
         log.info("댓글 수정 요청 - boardId : {}, commentId : {}",boardId,commentId);
-        try{
-            CommentResponseDTO response = commentService.updateComment(boardId,commentId,requestDTO);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e){
-            log.error("댓글 수정 실패 - 권한 오류 : {}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalArgumentException e){
-            log.error("댓글 수정 실패 - 잘못된 요청 : {}",e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+//        try{
+//            CommentResponseDTO response = commentService.updateComment(boardId,commentId,requestDTO);
+//            return ResponseEntity.ok(response);
+//        } catch (IllegalStateException e){
+//            log.error("댓글 수정 실패 - 권한 오류 : {}",e.getMessage());
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        } catch (IllegalArgumentException e){
+//            log.error("댓글 수정 실패 - 잘못된 요청 : {}",e.getMessage());
+//            return ResponseEntity.badRequest().build();
+//        }
+        return ResponseEntity.ok(commentService.updateComment(boardId,commentId,requestDTO));
 
     }
 
@@ -71,31 +73,34 @@ public class BoardCommentController {
     public ResponseEntity<Void> deleteComment(@PathVariable Long boardId,
                                               @PathVariable Long commentId){
         log.info("댓글 삭제 요청 - boardId :{} commentId :{}",boardId,commentId);
-        try{
-            commentService.deleteComment(boardId,commentId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalStateException e){
-            log.error("댓글 삭제 실패 - 권한 오류 : {}",e.getMessage() );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalArgumentException e){
-            log.error("댓글 삭제 실패 - 잘못된 요청 : {}",e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+//        try{
+//            commentService.deleteComment(boardId,commentId);
+//            return ResponseEntity.noContent().build();
+//        } catch (IllegalStateException e){
+//            log.error("댓글 삭제 실패 - 권한 오류 : {}",e.getMessage() );
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        } catch (IllegalArgumentException e){
+//            log.error("댓글 삭제 실패 - 잘못된 요청 : {}",e.getMessage());
+//            return ResponseEntity.badRequest().build();
+//        }
+        commentService.deleteComment(boardId,commentId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{commentId}/like")
     public ResponseEntity<Boolean> toggleLike(@PathVariable Long boardId, @PathVariable Long commentId){
         log.info("댓글 좋아요 토글 요청 - boardId : {} commentId : {}",boardId,commentId);
-        try{
-            Boolean isLiked = commentService.toggleLike(boardId,commentId);
-            return ResponseEntity.ok(isLiked);
-        } catch (IllegalStateException e){
-            log.error("좋아요 실패 - 인증 오류 : {}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (IllegalArgumentException e){
-            log.error("좋아요 실패 - 잘못된 요청 : {}",e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+//        try{
+//            Boolean isLiked = commentService.toggleLike(boardId,commentId);
+//            return ResponseEntity.ok(isLiked);
+//        } catch (IllegalStateException e){
+//            log.error("좋아요 실패 - 인증 오류 : {}",e.getMessage());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        } catch (IllegalArgumentException e){
+//            log.error("좋아요 실패 - 잘못된 요청 : {}",e.getMessage());
+//            return ResponseEntity.badRequest().build();
+//        }
+        return ResponseEntity.ok(commentService.toggleLike(boardId,commentId));
     }
 
 }

@@ -19,16 +19,16 @@ public class SubscriptionController {
     @PostMapping("/{targetId}")
     public ResponseEntity<Boolean> toggleSubscription(@PathVariable Long targetId,
                                                       @AuthenticationPrincipal CustomUserDetails userDetails){
-        if(userDetails ==null){
-            log.warn("인증 정보 없음");
-            return ResponseEntity.status(401).build();
-        }
+//        if(userDetails ==null){
+//            log.warn("인증 정보 없음");
+//            return ResponseEntity.status(401).build();
+//        }
 
-        Long currentMemberId = userDetails.getMemberId();
+//        Long currentMemberId = userDetails.getMemberId();
 
-        boolean result = subscriptionService.toggleSubscription(currentMemberId,targetId);
+//        boolean result = subscriptionService.toggleSubscription(userDetails.getMemberId(),targetId);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(subscriptionService.toggleSubscription(userDetails.getMemberId(),targetId));
     }
 
     @GetMapping("/{targetId}")
@@ -37,9 +37,9 @@ public class SubscriptionController {
             @AuthenticationPrincipal CustomUserDetails userDetails){
         Long currentMemberId = (userDetails !=null) ? userDetails.getMemberId() : null;
 
-        boolean result = subscriptionService.checkSubscriptionStatus(currentMemberId,targetId);
+//        boolean result = subscriptionService.checkSubscriptionStatus(currentMemberId,targetId);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(subscriptionService.checkSubscriptionStatus(currentMemberId,targetId));
     }
 
 }

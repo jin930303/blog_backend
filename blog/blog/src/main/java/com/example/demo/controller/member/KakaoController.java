@@ -5,6 +5,8 @@ import com.example.demo.service.member.JwtTokenProvider;
 import com.example.demo.service.member.KakaoOAuthService;
 import com.example.demo.service.member.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,28 +17,33 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
+@RequiredArgsConstructor
 public class KakaoController {
+
     private final KakaoOAuthService kakaoOAuthService;
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public KakaoController(KakaoOAuthService kakaoOAuthService, MemberService memberService, JwtTokenProvider jwtTokenProvider) {
-        this.kakaoOAuthService = kakaoOAuthService;
-        this.memberService = memberService;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+//    public KakaoController(KakaoOAuthService kakaoOAuthService, MemberService memberService, JwtTokenProvider jwtTokenProvider) {
+//        this.kakaoOAuthService = kakaoOAuthService;
+//        this.memberService = memberService;
+//        this.jwtTokenProvider = jwtTokenProvider;
+//    }
+
+    @Value("${fronted.url}")
+    private String frontedUrl;
 
     // 로그인 시작 URL 제공
     @GetMapping("/api/v1/oauth/kakao/url")
     public ResponseEntity<Map<String, String>> getKakaoAuthUrl() {
-        String authUrl = kakaoOAuthService.getKakaoAuthUrl();
-        Map<String, String> response = new HashMap<>();
-        response.put("kakaoAuthUrl", authUrl);
-        return ResponseEntity.ok(response);
+//        String authUrl = kakaoOAuthService.getKakaoAuthUrl();
+//        Map<String, String> response = new HashMap<>();
+//        response.put("kakaoAuthUrl", authUrl);
+        return ResponseEntity.ok(Map.of("kakaoAuthUrl", kakaoOAuthService.getKakaoAuthUrl()));
     }
 
     // redirect URI 처리
@@ -47,8 +54,7 @@ public class KakaoController {
         - 여기서 인가 코드를 받아서 KakaoOAuthService로 넘겨 토큰 교환하는 데 사용함
         - Security가 코드를 직접 처리는 안 하는데, 이거 요청한 엔드포인트를 막으면 403에러 바로 뜸
     */
-    @Value("${fronted.url}")
-    private String frontedUrl;
+
 
     @GetMapping("/login/oauth2/code/kakao")
     public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) {
@@ -97,7 +103,7 @@ public class KakaoController {
             // RuntimeException 대신 Exception으로 변경하여 URLEncoder의 IOException 처리
         } catch (Exception e) {
             // 예외 발생 시 (토큰 발급 실패, 정보 조회 실패 등)
-            e.printStackTrace();
+            log.error("[Kakao OAuth] 로그인 처리 중 오류 발생 - message: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }

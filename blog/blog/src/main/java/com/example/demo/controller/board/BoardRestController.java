@@ -23,11 +23,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -46,31 +46,31 @@ public class BoardRestController {
     private final BoardSearchService boardSearchService;
 
     // ⭐ 1. 새로운 인증 상태 확인 API 추가
-    @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
-    @ApiResponse(responseCode = "200", description = "인증 성공, 사용자 정보 반환")
-    @ApiResponse(responseCode = "401", description = "인증 실패, 유효한 토큰 없음")
-    @GetMapping("/auth-check")
-    public ResponseEntity<Map<String, Object>> authCheck(@AuthenticationPrincipal CustomUserDetails details) {
-
-        // CustomUserDetails가 null이 아니라는 것은 Spring Security Filter를 통과했다는 의미
-        if (details == null) {
-            // 이 코드가 실행되는 경우는 드물지만, 안전 장치로 남겨둡니다.
-            log.info("인증 체크 요청: CustomUserDetails가 Null입니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Map<String, Object> response = new HashMap<>();
-
-        // Spring Security는 JWT의 Claims에서 정보를 추출하여 CustomUserDetails에 담습니다.
-        response.put("isLoggedIn", true);
-        response.put("memberId", details.getMemberId());
-        // JWT Payload에 저장된 닉네임 정보를 그대로 사용합니다.
-        response.put("userNickname", details.getNickname());
-
-        log.info("인증 체크 성공: MemberId={}, Nickname={}", details.getMemberId(), details.getNickname());
-
-        return ResponseEntity.ok(response);
-    }
+//    @Operation(summary = "로그인 상태 및 닉네임 확인", description = "유효한 JWT 쿠키가 있으면 사용자 ID와 닉네임을 반환합니다.")
+//    @ApiResponse(responseCode = "200", description = "인증 성공, 사용자 정보 반환")
+//    @ApiResponse(responseCode = "401", description = "인증 실패, 유효한 토큰 없음")
+//    @GetMapping("/auth-check")
+//    public ResponseEntity<Map<String, Object>> authCheck(@AuthenticationPrincipal CustomUserDetails details) {
+//
+//        // CustomUserDetails가 null이 아니라는 것은 Spring Security Filter를 통과했다는 의미
+//        if (details == null) {
+//            // 이 코드가 실행되는 경우는 드물지만, 안전 장치로 남겨둡니다.
+//            log.info("인증 체크 요청: CustomUserDetails가 Null입니다.");
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+//
+//        Map<String, Object> response = new HashMap<>();
+//
+//        // Spring Security는 JWT의 Claims에서 정보를 추출하여 CustomUserDetails에 담습니다.
+//        response.put("isLoggedIn", true);
+//        response.put("memberId", details.getMemberId());
+//        // JWT Payload에 저장된 닉네임 정보를 그대로 사용합니다.
+//        response.put("userNickname", details.getNickname());
+//
+//        log.info("인증 체크 성공: MemberId={}, Nickname={}", details.getMemberId(), details.getNickname());
+//
+//        return ResponseEntity.ok(response);
+//    }
 
     @Data
     private static class MarkdownPreviewRequest{
@@ -82,50 +82,56 @@ public class BoardRestController {
 
         return details != null ? details.getMemberId() : null;
     }
+
     @Operation(summary = "마크다운 미리보기", description = "입력된 마크다운 텍스트를 HTML로 변환하여 반환합니다.")
     @ApiResponse(responseCode = "200",description = "HTML 컨텐츠 변환 성공",
                 content = @Content(mediaType = "text/html",schema = @Schema(implementation = String.class)))
     @PostMapping(value = "/markdown-preview",produces = "text/html; charset=utf-8")
     public ResponseEntity<String> previewMarkdown(@RequestBody MarkdownPreviewRequest request){
-        String htmlContent = boardService.markdownHtml(request.getMarkdownText());
-        return ResponseEntity.ok(htmlContent);
+//        String htmlContent = boardService.markdownHtml(request.getMarkdownText());
+        return ResponseEntity.ok(boardService.markdownHtml(request.getMarkdownText()));
     }
 
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@RequestParam("file")MultipartFile file){
-        try{
-            String fileUrl = boardService.uploadFile(file);
-            return ResponseEntity.ok(fileUrl);
-        }
-        catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+//        try{
+//            String fileUrl = boardService.uploadFile(file);
+//            return ResponseEntity.ok(fileUrl);
+//        }
+//        catch (IllegalArgumentException e){
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+        return ResponseEntity.ok(boardService.uploadFile(file));
     }
+
     @PostMapping
     public ResponseEntity<Long> createBoard(@Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
 
-        if(details == null){
-            log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+//        if(details == null){
+//            log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        // details가 null이 아님을 확인했으므로, 안전하게 getMemberId()를 호출할 수 있습니다.
+//        Long currentMemberId = details.getMemberId();
+//
+//        // 만약 memberId가 DB에 null로 저장된 특이 케이스까지 막고 싶다면 추가 검사
+//        if (currentMemberId == null) {
+//            log.warn("인증된 사용자이지만 MemberId가 누락되었습니다.");
+//            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+//        }
+//
+//        try{
+//            Long boardId = boardService.saveNewBoard(boardRequestDTO, currentMemberId);
+//            return new ResponseEntity<>(boardId,HttpStatus.CREATED);
+//        }
+//        catch(EntityNotFoundException e){
+//           /* log.error("작성자 id : {} 를 찾을 수 없습니다."*//*,currentMemberId*//*);*/
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }
+        Long boardId = boardService.saveNewBoard(boardRequestDTO, details.getMemberId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(boardId);
 
-        // details가 null이 아님을 확인했으므로, 안전하게 getMemberId()를 호출할 수 있습니다.
-        Long currentMemberId = details.getMemberId();
-
-        // 만약 memberId가 DB에 null로 저장된 특이 케이스까지 막고 싶다면 추가 검사
-        if (currentMemberId == null) {
-            log.warn("인증된 사용자이지만 MemberId가 누락되었습니다.");
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-
-        try{
-            Long boardId = boardService.saveNewBoard(boardRequestDTO, currentMemberId);
-            return new ResponseEntity<>(boardId,HttpStatus.CREATED);
-        }
-        catch(EntityNotFoundException e){
-           /* log.error("작성자 id : {} 를 찾을 수 없습니다."*//*,currentMemberId*//*);*/
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
     }
 
     @GetMapping("/{boardId}")
@@ -140,43 +146,45 @@ public class BoardRestController {
 
         boardService.increaseView(boardId, clientIdentifier);
 
-        Long authorId = board.getMember().getMemberId();
-        boolean isAuthor = (currentMemberId != null) && currentMemberId.equals(authorId);
+//        Long authorId = board.getMember().getMemberId();
+        boolean isAuthor = (currentMemberId != null) && currentMemberId.equals(board.getMember().getMemberId());
 
         Boolean isLiked = currentMemberId != null && boardLikeService.isBoardLikedByUser(boardId, currentMemberId);
-        List<BoardHashtagEntity> hashtagEntities = boardHashtagRepository.findAllByBoardId(boardId);
-        List<String> tags = hashtagEntities.stream()
+//        List<BoardHashtagEntity> hashtagEntities = boardHashtagRepository.findAllByBoardId(boardId);
+        List<String> tags = boardHashtagRepository.findAllByBoardId(boardId).stream()
                 .map(entity -> entity.getHashtag().getName())
                 .toList();
-        BoardDetailResponse response = BoardDetailResponse.of(board,isAuthor,isLiked,tags);
-        return ResponseEntity.ok(response);
+//        BoardDetailResponse response = BoardDetailResponse.of(board,isAuthor,isLiked,tags);
+        return ResponseEntity.ok(BoardDetailResponse.of(board,isAuthor,isLiked,tags));
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details) throws AccessDeniedException {
 
-        Long currentMemberId = details.getMemberId();
+//        Long currentMemberId = details.getMemberId();
+//        try{
+//            boardRequestDTO.setBoardId(boardId);
+//            // Service 메서드 시그니처 변경에 맞춰 currentMemberId를 추가했습니다.
+//            boardService.updateBoard(boardRequestDTO, currentMemberId);
+//            return ResponseEntity.noContent().build();
+//        }
+//        // AccessDeniedException은 서비스 계층에서 권한이 없는 경우 발생합니다.
+//        catch (AccessDeniedException e) {
+//            log.warn("게시글 수정 권한 없음 (403 Forbidden) : {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+//        }
+//        catch (IllegalArgumentException e){
+//            log.info("게시글 수정 실패 (404 Not Found) :{}", e.getMessage());
+//            return ResponseEntity.notFound().build();
+//        }
+//        catch (Exception e){
+//            log.error("게시글 수정 중 오류(500 Internal Server Error) :{}",e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+        boardRequestDTO.setBoardId(boardId);
+        boardService.updateBoard(boardRequestDTO, details.getMemberId());
+        return ResponseEntity.noContent().build();
 
-
-        try{
-            boardRequestDTO.setBoardId(boardId);
-            // Service 메서드 시그니처 변경에 맞춰 currentMemberId를 추가했습니다.
-            boardService.updateBoard(boardRequestDTO, currentMemberId);
-            return ResponseEntity.noContent().build();
-        }
-        // AccessDeniedException은 서비스 계층에서 권한이 없는 경우 발생합니다.
-        catch (AccessDeniedException e) {
-            log.warn("게시글 수정 권한 없음 (403 Forbidden) : {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
-        catch (IllegalArgumentException e){
-            log.info("게시글 수정 실패 (404 Not Found) :{}", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
-        catch (Exception e){
-            log.error("게시글 수정 중 오류(500 Internal Server Error) :{}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     @DeleteMapping("/{boardId}")
@@ -196,14 +204,15 @@ public class BoardRestController {
     {
         Long currentMemberId =(details != null) ? details.getMemberId() : null;
 
-        try{
-            BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate,currentMemberId);
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch(Exception e){
-            log.error("커서 기반 게시글 조회 중 오류 발생 : {}",e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+//        try{
+//            BoardListResponse response = boardService.getBoardsWithCursor(size,cursorId,cursorDate,currentMemberId);
+//            return new ResponseEntity<>(response,HttpStatus.OK);
+//        }
+//        catch(Exception e){
+//            log.error("커서 기반 게시글 조회 중 오류 발생 : {}",e.getMessage());
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+        return ResponseEntity.ok(boardService.getBoardsWithCursor(size,cursorId,cursorDate,currentMemberId));
 
     }
     @Operation(summary = "게시글 좋아요/취소 토글",description = "인증된 사용자가 특정 게시글에 좋아요를 누르거나 취소합니다.")
@@ -214,26 +223,27 @@ public class BoardRestController {
     @PostMapping("/{boardId}/like")
     public ResponseEntity<Boolean> toggleLike(@PathVariable("boardId")Long boardId,
                                               @AuthenticationPrincipal CustomUserDetails details){
-        Long currentMemberId = getCurrentMemberId(details);
+//        Long currentMemberId = getCurrentMemberId(details);
 
-        if(currentMemberId == null){
-            log.warn("좋아요 요청 : 비로그인 사용자 접근 거부 (401)");
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        try{
-            Boolean isLiked = boardLikeService.toggleLike(boardId,currentMemberId);
-
-            return ResponseEntity.ok(isLiked);
-        }
-        catch (EntityNotFoundException e){
-            log.warn("좋아요 토글 실패 (404 Not Found) : {}",e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
-        catch (Exception e){
-            log.error("좋아요 토글 중 오류 (500 Internal Server Error) : {}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+//        if(currentMemberId == null){
+//            log.warn("좋아요 요청 : 비로그인 사용자 접근 거부 (401)");
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        try{
+//            Boolean isLiked = boardLikeService.toggleLike(boardId,currentMemberId);
+//
+//            return ResponseEntity.ok(isLiked);
+//        }
+//        catch (EntityNotFoundException e){
+//            log.warn("좋아요 토글 실패 (404 Not Found) : {}",e.getMessage());
+//            return ResponseEntity.notFound().build();
+//        }
+//        catch (Exception e){
+//            log.error("좋아요 토글 중 오류 (500 Internal Server Error) : {}",e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+        return ResponseEntity.ok(boardLikeService.toggleLike(boardId, details.getMemberId()));
 
     }
 
@@ -253,19 +263,20 @@ public class BoardRestController {
 
         Long currentMemberId = (userDetails != null) ? userDetails.getMemberId() : null;
 //        int limit = 20;
-        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId);
-        return ResponseEntity.ok(result);
+//        List<BoardResponse> result = boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId);
+        return ResponseEntity.ok(boardService.searchBoards(keyword,tagName,currentMemberId,lastBoardId));
     }
 
     @Operation(summary = "ES bulk indexing", description = "기존 DB 데이터를 Elasticsearch에 전체 색인합니다.")
     @PostMapping("/admin/es-bulk-index")
-    public ResponseEntity<String> bulkIndex() {
-        try {
+    public ResponseEntity<Map<String,String>> bulkIndex() {
+//        try {
             boardSearchService.bulkIndex();
-            return ResponseEntity.ok("ES bulk indexing 완료");
-        } catch (Exception e) {
-            log.error("[ES] bulk indexing 실패: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("bulk indexing 실패: " + e.getMessage());
-        }
+//            return ResponseEntity.ok("ES bulk indexing 완료");
+//        } catch (Exception e) {
+//            log.error("[ES] bulk indexing 실패: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("bulk indexing 실패: " + e.getMessage());
+//        }
+        return ResponseEntity.ok(Map.of("message","ES bulk indexing 완료"));
     }
 }
