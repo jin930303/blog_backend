@@ -5,12 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
 @AllArgsConstructor
+@Builder
 public class MemberDTO {
     private long memberId;
     @NotBlank(message = "아이디는 필수입니다.")
@@ -31,7 +33,8 @@ public class MemberDTO {
     @Email(message = "올바른 이메일 형식이 아닙니다.")
     private String email;
 
-    private String role;
+    @Builder.Default
+    private String role = "ROLE_USER";
     private String provider;
     private String providerId;
 

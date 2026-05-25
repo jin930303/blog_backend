@@ -1,14 +1,11 @@
 package com.example.demo.controller.admin;
 
+import com.example.demo.dto.report.AdminReportResponseDTO;
 import com.example.demo.entity.report.ReportEntity;
 import com.example.demo.service.admin.AdminService;
-import com.example.demo.service.admin.AdminServiceImpl;
-import com.example.demo.service.member.CustomUserDetails;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -81,6 +78,9 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getReports(memberId));
     }
 
-
+    @GetMapping("/reports")
+    public ResponseEntity<List<AdminReportResponseDTO>> getAllReports(){
+        return ResponseEntity.ok(adminService.getAllReports());
+    }
 }
 

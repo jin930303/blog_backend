@@ -39,6 +39,7 @@ public class CommentResponseDTO {
                 .commentId(entity.getCommentId())
                 .content(entity.getContent())
                 .nickname(entity.getMember().getNickname())
+                .memberId(entity.getMember().getMemberId())
                 .inputDate(entity.getInputDate())
                 .isAuthor(isAuthor)
                 .children(childDTOs)
