@@ -90,7 +90,7 @@ public class BoardCommentImpl implements BoardCommentService {
         if (boardWriter.getMemberId() != member.getMemberId()) {
             notificationService.send(
                     boardWriter, member.getNickname() + "님이 게시글에 댓글을 남겼습니다.",
-                    "/board/" + boardId
+                    "/board/" + boardId + "?commentId"+ savedComment.getCommentId()
             );
         }
         return convertToDTO(savedComment, member);

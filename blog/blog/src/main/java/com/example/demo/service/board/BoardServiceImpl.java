@@ -8,12 +8,15 @@ import com.example.demo.entity.board.BoardEntity;
 import com.example.demo.entity.board.BoardHashtagEntity;
 import com.example.demo.entity.board.HashtagEntity;
 import com.example.demo.entity.member.MemberEntity;
+import com.example.demo.entity.subscription.SubscriptionEntity;
 import com.example.demo.repository.board.BoardHashtagRepository;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.board.BoardSummary;
 import com.example.demo.repository.board.HashtagRepository;
 import com.example.demo.repository.member.MemberRepository;
+import com.example.demo.repository.subscription.SubscriptionRepository;
 import com.example.demo.service.file.FileService;
+import com.example.demo.service.notification.NotificationService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 
@@ -61,6 +64,9 @@ public class BoardServiceImpl implements BoardService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final BoardRedisService redisService;
+
+    private final SubscriptionRepository subscriptionRepository;
+    private final NotificationService notificationService;
 
     @Value("${upload.file.path}")
     private String uploadDir;
@@ -159,6 +165,19 @@ public class BoardServiceImpl implements BoardService {
             boardSearchService.index(boardForIndex);
         } catch (Exception e) {
             log.error("[ES] 게시글 색인 실패 boardId={}: {}", saveEntity.getBoardId(), e.getMessage());
+        }
+        try{
+            List<SubscriptionEntity> subscribers = subscriptionRepository.findAllByFollowing(author);
+            for(SubscriptionEntity subscription : subscribers){
+                MemberEntity subscriber = subscription.getFollower();
+                notificationService.send(
+                        subscriber,
+                        author.getNickname() + "님이 새 게시글을 작성했습니다.: "+boardRequestDTO.getTitle(),
+                        "/board/"+saveEntity.getBoardId()
+                );
+            }
+        } catch (Exception e){
+            log.error("[알림] 새 게시글 구독자 알림 발송 실패 boardId={}: {}",saveEntity.getBoardId(),e.getMessage());
         }
 
         return saveEntity.getBoardId();
