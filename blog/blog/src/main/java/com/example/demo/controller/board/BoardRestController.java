@@ -197,7 +197,7 @@ public class BoardRestController {
 
     @GetMapping("/cursor")
     public ResponseEntity<BoardListResponse> getBoardsByCursor(
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(required = false,value = "cursorId")Long cursorId,
             @RequestParam(required = false,value = "cursorDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime cursorDate,
             @AuthenticationPrincipal CustomUserDetails details)
