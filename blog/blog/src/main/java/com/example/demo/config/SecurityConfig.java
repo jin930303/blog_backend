@@ -37,7 +37,7 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:5173"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
        configuration.setAllowedHeaders(Arrays.asList(
                "Authorization",
                "Content-Type",
@@ -90,12 +90,12 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/v1/notifications/subscribe").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/notifications/subscribe").permitAll()
 
                         // ========================================================
                         // [GROUP 3] 인증이 '필수'인 기능 (Authenticated) - 먼저 선언!
                         // ========================================================
-                        .requestMatchers("/api/v1/boards/admin/**").permitAll()
+                        .requestMatchers("/api/v1/boards/admin/**").hasRole("ADMIN")
                         // 3-1. 게시글 쓰기/수정/삭제/이미지업로드/좋아요
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards/upload-image").authenticated()
@@ -112,6 +112,7 @@ public class SecurityConfig {
                         // 3-3. 알림 및 구독 (쓰기 작업)
                         .requestMatchers("/api/v1/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/subscriptions/**").authenticated()
+
 
                         // 3-4. 테스트용 (필요시 제거)
                         .requestMatchers("/api/v1/test/**").authenticated()
