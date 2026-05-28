@@ -1,7 +1,11 @@
 package com.example.demo.controller.member;
 
+import com.example.demo.dto.board.MyBoardResponseDTO;
 import com.example.demo.dto.member.LoginRequestDTO;
 import com.example.demo.dto.member.MemberDTO;
+import com.example.demo.dto.member.NicknameChangeRequestDTO;
+import com.example.demo.dto.member.PwChangeRequestDTO;
+import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.service.member.CustomUserDetails;
 import com.example.demo.service.member.JwtTokenProvider;
 import com.example.demo.service.member.MemberService;
@@ -17,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -160,10 +165,7 @@ public class MemberRestController {
     @GetMapping("/mypage")
     public ResponseEntity<Map<String, Object>> mypage(
             @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-//        Map<String, Object> responseBody = new HashMap<>();
-//
-//        if (customUserDetails != null) {
-//            try {
+
                 // 1. JWT에서 가져온 정보 memberId, username
                 Long memberId = customUserDetails.getMemberId();
                 String username = customUserDetails.getUsername();
@@ -171,25 +173,48 @@ public class MemberRestController {
                 // 2. DB에서 추가 정보 조회 하기
                 MemberDTO memberDTO = memberService.getMemberInfoById(memberId);
 
-//                responseBody.put("memberId", memberId);
-//                responseBody.put("username", username);
-//                responseBody.put("nickname", memberDTO.getNickname());
-//                responseBody.put("email", memberDTO.getEmail());
-//                responseBody.put("message", "마이페이지 정보 조회 성공.");
+
                 return ResponseEntity.ok(Map.of("memberId",memberId,
                         "username",username,
                         "nickname",memberDTO.getNickname(),
                         "email",memberDTO.getEmail(),
                         "message","마이페이지 정보 조회 성공"));
 
-//            } catch (Exception e) {
-//                // DB 조회 또는 데이터 처리 오류
-//                responseBody.put("message", "사용자 정보 조회 중 오류 발생");
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
-//            }
-//        } else {
-//            responseBody.put("message", "로그인 세션이 유효하지 않음");
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
-//        }
+
+    }
+
+    // 비밀번호 변경
+    /**
+     * PATCH /api/v1/mypage/password
+     */
+    @PatchMapping("/mypage/password")
+    public ResponseEntity<Map<String,String>>changePw(@Valid @RequestBody PwChangeRequestDTO dto,@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        memberService.changePw(customUserDetails.getMemberId(),dto);
+        return ResponseEntity.ok(Map.of("message","비밀번호가 변경되었습니다."));
+    }
+
+    //닉네임 변경
+    /**
+     *  PATCH /api/v1/mypage/nickname
+     */
+    @PatchMapping("/mypage/nickname")
+    public ResponseEntity<Map<String,String>> changeNickname(@Valid @RequestBody NicknameChangeRequestDTO dto, @AuthenticationPrincipal CustomUserDetails userDetails){
+        memberService.changeNickname(dto,userDetails.getMemberId());
+        return ResponseEntity.ok(Map.of("message","닉네임이 변경되었습니다.","nickname",dto.getNickname()));
+    }
+
+    //내가 쓴 게시글 목록
+    /**
+     * GET /api/v1/mypage/boards
+     */
+    @GetMapping("/mypage/boards")
+    public ResponseEntity<List<MyBoardResponseDTO>>getMyBoards(@AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(memberService.getMyBoards(userDetails.getMemberId()));
+    }
+
+    @PostMapping("/mypage/password/verify")
+    public ResponseEntity<Map<String,String >> verifyPassword(@RequestBody Map<String,String > body, @AuthenticationPrincipal CustomUserDetails userDetails){
+        memberService.verifyCurrentPassword(userDetails.getMemberId(),body.get("currentPw"));
+        return ResponseEntity.ok(Map.of("message","비밀번호가 확인되었습니다."));
     }
 }

@@ -2,6 +2,7 @@ package com.example.demo.repository.board;
 
 import com.example.demo.dto.board.BoardResponse;
 import com.example.demo.entity.board.BoardEntity;
+import com.example.demo.entity.member.MemberEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -78,4 +79,6 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
     // 2. 전체 조회 (bulk indexing용)
     @Query("SELECT DISTINCT b FROM BoardEntity b LEFT JOIN FETCH b.boardHashtags bh LEFT JOIN FETCH bh.hashtag")
     List<BoardEntity> findAllWithHashtags();
+
+    List<BoardEntity> findAllByMemberOrderByInputDateDesc(MemberEntity member);
 }
