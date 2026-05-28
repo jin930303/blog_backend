@@ -1,29 +1,32 @@
 package com.example.demo.service.member;
 
+import com.example.demo.dto.board.MyBoardResponseDTO;
+import com.example.demo.dto.member.NicknameChangeRequestDTO;
+import com.example.demo.dto.member.PwChangeRequestDTO;
 import com.example.demo.dto.member.google.GoogleUserInfoDTO;
 import com.example.demo.dto.member.kakao.KakaoUserInfoDTO;
 import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.entity.member.MemberEntity;
+import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.member.MemberRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService{
 
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
-
-    public MemberServiceImpl(PasswordEncoder passwordEncoder, MemberRepository memberRepository, JwtTokenProvider jwtTokenProvider) {
-        this.passwordEncoder = passwordEncoder;
-        this.memberRepository = memberRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+    private final BoardRepository boardRepository;
 
     @Override
     public void signup_save(MemberDTO dto) {
@@ -126,5 +129,61 @@ public class MemberServiceImpl implements MemberService{
                 member.getRole(),
                 member.getNickname()
         );
+    }
+
+    @Override
+    @Transactional
+    public void changePw(Long memberId, PwChangeRequestDTO dto) {
+        MemberEntity member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+
+        // 새 비밀번호 === 현재 비밀번호 체크
+        if(passwordEncoder.matches(dto.getNewPw(),member.getPassword())){
+            throw new IllegalArgumentException("새 비밀번호는 현재 비밀번호와 달라야합니다.");
+        }
+
+        //새 비밀번호 === 새 비밀번호 확인 체크
+        if(!dto.getNewPw().equals(dto.getNewPwConfirm())){
+            throw new IllegalArgumentException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        member.setPassword(passwordEncoder.encode(dto.getNewPw()));
+    }
+
+    //닉네임 변경
+    @Override
+    @Transactional
+    public void changeNickname(NicknameChangeRequestDTO dto, Long memberId) {
+        MemberEntity member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        //현재 닉네임과 동일한지 체크
+        if(member.getNickname().equals(dto.getNickname())){
+            throw new IllegalArgumentException("현재 닉네임과 동일합니다.");
+        }
+
+        //중복 체크
+        if(memberRepository.countByNickname(dto.getNickname())>0){
+            throw new IllegalArgumentException("이미 사용중인 닉네임입니다.");
+        }
+        member.setNickname(dto.getNickname());
+
+    }
+
+    @Override
+    public List<MyBoardResponseDTO> getMyBoards(Long memberId) {
+        MemberEntity member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        return boardRepository.findAllByMemberOrderByInputDateDesc(member)
+                .stream()
+                .map(MyBoardResponseDTO :: from)
+                .toList();
+    }
+
+    @Override
+    public void verifyCurrentPassword(Long memberId, String currentPw) {
+        MemberEntity member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        if(!passwordEncoder.matches(currentPw,member.getPassword())){
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
     }
 }

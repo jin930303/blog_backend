@@ -21,7 +21,7 @@ public class MemberDTO {
     private String username;
 
     @NotBlank(message = "비밀번호는 필수입니다.")
-    @Size(min = 8,max = 100, message ="비밀번호는 8자 이상, 10자 이하입니다." )
+    @Size(min = 8,max = 100, message ="비밀번호는 8자 이상, 100자 이하입니다." )
     @Pattern(regexp ="^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).*$",message ="비밀번호는 대문자와 특수문자를 각각 1개 이상 포함해야 합니다." )
     private String password;
 
