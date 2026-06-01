@@ -25,4 +25,7 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
     Optional<MemberEntity> findByProviderId(String id);
 
     Optional<MemberEntity> findByProviderAndProviderId(String provider, String providerId);
+
+    @Query("SELECT m.username FROM MemberEntity m WHERE m.email = :email")
+    Optional<String> findUsernameByEmail(@Param("email") String email);
 }
