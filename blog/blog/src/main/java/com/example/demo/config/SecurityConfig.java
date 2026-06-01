@@ -132,6 +132,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/boards/cursor").permitAll()             // 커서 페이징
                         .requestMatchers(HttpMethod.POST, "/api/v1/boards/markdown-preview").permitAll() // 마크다운 미리보기
                         .requestMatchers(HttpMethod.GET, "/api/v1/subscriptions/**").permitAll() // 구독 여부 조회
+                        .requestMatchers("/api/v1/email/**").permitAll()
 
                         // ========================================================
                         // [GROUP 5] 그 외 모든 요청

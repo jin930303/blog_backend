@@ -9,6 +9,7 @@ import com.example.demo.dto.member.MemberDTO;
 import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.board.BoardRepository;
 import com.example.demo.repository.member.MemberRepository;
+import com.example.demo.service.email.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,9 +28,13 @@ public class MemberServiceImpl implements MemberService{
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final BoardRepository boardRepository;
+    private final EmailService emailService;
 
     @Override
     public void signup_save(MemberDTO dto) {
+        if(!emailService.isVerified(dto.getEmail())){
+            throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+        }
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
         MemberEntity entity = new MemberEntity();
         entity.setUsername(dto.getUsername());
@@ -39,6 +44,7 @@ public class MemberServiceImpl implements MemberService{
         entity.setRole("ROLE_USER");
 
         memberRepository.save(entity);
+        emailService.deleteVerified(dto.getEmail());
     }
 
     @Override
