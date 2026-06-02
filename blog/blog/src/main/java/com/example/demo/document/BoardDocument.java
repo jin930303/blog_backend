@@ -58,11 +58,13 @@ public class BoardDocument {
                 .map(bh -> bh.getHashtag().getName())
                 .collect(Collectors.toList());
 
+        String nickname = (board.getMember() !=null) ? board.getMember().getNickname() : null;
+
         return BoardDocument.builder()
                 .boardId(board.getBoardId())
                 .title(board.getTitle())
                 .contentSummary(board.getContentSummary())
-                .nickname(board.getNickname())
+                .nickname(nickname)
                 .category(board.getCategory())
                 .likes(board.getLikes())
                 .views(board.getViews())

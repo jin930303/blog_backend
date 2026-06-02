@@ -29,7 +29,7 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
                 b.board_id AS boardId, 
                 b.title, 
                 b.content_summary AS contentSummary, 
-                b.nickname, 
+                m.nickname, 
                 b.file_path AS filePath, 
                 b.file_original_name AS fileOriginalName, 
                 b.file_size AS fileSize, 
@@ -73,7 +73,9 @@ public interface BoardRepository extends JpaRepository<BoardEntity,Long> {
     void addViews(@Param("boardId") long boardId, @Param("increment") long increment);
 
     // 1. 단건 조회 시 해시태그 fetch join (작성/수정 후 ES 색인용)
-    @Query("SELECT b FROM BoardEntity b LEFT JOIN FETCH b.boardHashtags bh LEFT JOIN FETCH bh.hashtag WHERE b.boardId = :boardId")
+    @Query("SELECT b FROM BoardEntity b LEFT JOIN FETCH b.member " +
+            "LEFT JOIN FETCH b.boardHashtags bh " +
+            "LEFT JOIN FETCH bh.hashtag WHERE b.boardId = :boardId")
     Optional<BoardEntity> findWithHashtagsById(@Param("boardId") Long boardId);
 
     // 2. 전체 조회 (bulk indexing용)
