@@ -140,7 +140,7 @@ public class BoardServiceImpl implements BoardService {
         BoardEntity entity = BoardEntity.builder()
                 .title(boardRequestDTO.getTitle())
                 .content(htmlContent)
-                .nickname(boardRequestDTO.getNickname())
+//                .nickname(boardRequestDTO.getNickname())
                 .category(boardRequestDTO.getCategory())
                 .inputDate(LocalDateTime.now())
                 .modifiedDate(LocalDateTime.now())
@@ -247,7 +247,7 @@ public class BoardServiceImpl implements BoardService {
 
         board.update(
                 boardRequestDTO.getTitle(),
-                boardRequestDTO.getNickname(),
+//                boardRequestDTO.getNickname(),
                 newHtmlContent,
                 boardRequestDTO.getCategory(),
                 originalFileName,

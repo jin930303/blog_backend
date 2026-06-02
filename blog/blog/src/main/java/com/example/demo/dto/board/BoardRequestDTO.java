@@ -22,8 +22,8 @@ public class BoardRequestDTO {
         @Size(max = 50000,message = "내용이 너무 깁니다.")
         private String content;
 
-        @Size(max = 50,message = "닉네임은 50자를 초과할 수 없습니다.")
-        private String nickname;
+//        @Size(max = 50,message = "닉네임은 50자를 초과할 수 없습니다.")
+//        private String nickname;
 
         @Size(max = 50,message = "카테고리는 50자를 초과할 수 없습니다.")
         private String category;

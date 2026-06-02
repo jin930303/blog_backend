@@ -30,7 +30,7 @@ public class BoardEntity {
     @Lob
     private String content;
 
-    private String nickname;
+//    private String nickname;
 
     @Column(name = "file_path")
     private String filePath;
@@ -71,7 +71,7 @@ public class BoardEntity {
 
     public void update(
             String title,
-            String nickname,
+//            String nickname,
             String content,
             String category,
             String fileOriginalName,
@@ -81,7 +81,7 @@ public class BoardEntity {
 
     ){
         this.title = title;
-        this.nickname = nickname;
+//        this.nickname = nickname;
         this.content=content;
         this.category=category;
         this.modifiedDate=LocalDateTime.now();

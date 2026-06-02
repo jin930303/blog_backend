@@ -43,13 +43,21 @@ public record BoardResponse(
     // 💡 기존 서비스 코드 호환용 오버로딩 메서드들 (이게 없어서 에러가 났던 것!)
     // =========================================================================
 
+    private static String resolveNickname(BoardEntity entity){
+        if(entity.getMember() != null){
+            return entity.getMember().getNickname();
+        }
+        return null;
+    }
+
+
     // 1. (Entity, Tags, Summary, isAuthor) - 상세 조회용
     public static BoardResponse fromEntity(BoardEntity entity, List<String> tags, String summary, boolean isAuthor) {
         return new BoardResponse(
                 entity.getBoardId(),
                 entity.getTitle(),
                 summary, // 전달받은 요약 사용
-                entity.getNickname(),
+                resolveNickname(entity),
                 entity.getFilePath(),
                 entity.getFileOriginalName(),
                 entity.getFileSize(),
@@ -69,7 +77,7 @@ public record BoardResponse(
                 entity.getBoardId(),
                 entity.getTitle(),
                 summary,
-                entity.getNickname(),
+                resolveNickname(entity),
                 entity.getFilePath(),
                 entity.getFileOriginalName(),
                 entity.getFileSize(),
