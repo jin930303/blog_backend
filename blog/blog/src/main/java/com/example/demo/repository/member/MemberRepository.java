@@ -28,4 +28,6 @@ public interface MemberRepository extends JpaRepository<MemberEntity, Long> {
 
     @Query("SELECT m.username FROM MemberEntity m WHERE m.email = :email")
     Optional<String> findUsernameByEmail(@Param("email") String email);
+
+    Optional<MemberEntity> findByUsernameAndEmail(String username, String email);
 }
