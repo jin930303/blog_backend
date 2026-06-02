@@ -27,7 +27,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -105,30 +105,15 @@ public class BoardRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Long> createBoard(@Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details){
+    public ResponseEntity<Long> createBoard(@Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details) throws AccessDeniedException {
 
-//        if(details == null){
-//            log.warn("게시글 작성 요청 : 비로그인 사용자 접근 거부");
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
-//
-//        // details가 null이 아님을 확인했으므로, 안전하게 getMemberId()를 호출할 수 있습니다.
-//        Long currentMemberId = details.getMemberId();
-//
-//        // 만약 memberId가 DB에 null로 저장된 특이 케이스까지 막고 싶다면 추가 검사
-//        if (currentMemberId == null) {
-//            log.warn("인증된 사용자이지만 MemberId가 누락되었습니다.");
-//            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//        }
-//
-//        try{
-//            Long boardId = boardService.saveNewBoard(boardRequestDTO, currentMemberId);
-//            return new ResponseEntity<>(boardId,HttpStatus.CREATED);
-//        }
-//        catch(EntityNotFoundException e){
-//           /* log.error("작성자 id : {} 를 찾을 수 없습니다."*//*,currentMemberId*//*);*/
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
+        if(boardRequestDTO.getCategory().equals("notice")){
+            boolean isAdmin = details.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+            if(!isAdmin){
+                throw new AccessDeniedException("공지사항은 관리자만 작성할 수 있습니다.");
+            }
+        }
+
         Long boardId = boardService.saveNewBoard(boardRequestDTO, details.getMemberId());
         return ResponseEntity.status(HttpStatus.CREATED).body(boardId);
 
@@ -159,7 +144,7 @@ public class BoardRestController {
     }
 
     @PutMapping("/{boardId}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details) throws AccessDeniedException {
+    public ResponseEntity<String> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardRequestDTO boardRequestDTO, @AuthenticationPrincipal CustomUserDetails details) throws AccessDeniedException, java.nio.file.AccessDeniedException {
 
 //        Long currentMemberId = details.getMemberId();
 //        try{
