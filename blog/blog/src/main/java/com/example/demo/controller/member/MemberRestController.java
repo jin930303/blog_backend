@@ -1,11 +1,9 @@
 package com.example.demo.controller.member;
 
 import com.example.demo.dto.board.MyBoardResponseDTO;
-import com.example.demo.dto.member.LoginRequestDTO;
-import com.example.demo.dto.member.MemberDTO;
-import com.example.demo.dto.member.NicknameChangeRequestDTO;
-import com.example.demo.dto.member.PwChangeRequestDTO;
+import com.example.demo.dto.member.*;
 import com.example.demo.entity.member.MemberEntity;
+import com.example.demo.service.email.EmailService;
 import com.example.demo.service.member.CustomUserDetails;
 import com.example.demo.service.member.JwtTokenProvider;
 import com.example.demo.service.member.MemberService;
@@ -13,12 +11,14 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,11 +27,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Slf4j
 public class MemberRestController {
 
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
@@ -217,4 +219,51 @@ public class MemberRestController {
         memberService.verifyCurrentPassword(userDetails.getMemberId(),body.get("currentPw"));
         return ResponseEntity.ok(Map.of("message","비밀번호가 확인되었습니다."));
     }
+
+    // 비밀번호 찾기 (재설정 링크 발송)
+    /**
+     * POST /api/v1/password/reset-request
+     * 요청 : {username, email}
+     * 응답 : 항상 동일한 메세지 (계정 존재 여부 노출 방지)
+     */
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<Map<String ,String>>requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequestDTO dto){
+
+        try{
+            emailService.sendPasswordResetLink(dto.getUsername(),dto.getEmail());
+
+            } catch (IllegalArgumentException e){
+            log.debug("[PwReset] 일치하는 계정 없음 - username = {}",dto.getUsername());
+        }
+        return ResponseEntity.ok(Map.of("message","입력하신 이메일로 재설정 링크를 발송했습니다."));
+
+    }
+
+    // 비밀번호 재설정 토큰 유효성 확인
+    /**
+     * GET /api/v1/password/reset-validate?token=...
+     * 프론트 진입 시 토큰 만료 여부 사전 확인용
+     */
+    @GetMapping("/password/reset-validate")
+    public ResponseEntity<Map<String ,Object>> validateResetToken(@RequestParam String token){
+        boolean valid = emailService.isValidResetToken(token);
+        if(!valid){
+            return ResponseEntity.status(HttpStatus.GONE).body(Map.of("valid",false,"message","만료되었거나 유효하지 않은 링크입니다/"));
+        }
+        return ResponseEntity.ok(Map.of("valid",true));
+    }
+
+    // 비밀번호 재설정 처리
+    /**
+     * POST /api/v1/password/reset
+     * 요청 : {token, newPassword}
+     */
+    @PostMapping("/password/reset")
+    public ResponseEntity<Map<String ,String>> resetPassword(
+            @Valid @RequestBody PasswordResetConfirmDTO dto){
+        emailService.resetPassword(dto.getToken(),dto.getNewPassword());
+        return ResponseEntity.ok(Map.of("message","비밀번호가 성공적으로 변경되었습니다."));
+    }
+
 }

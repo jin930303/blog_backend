@@ -1,15 +1,20 @@
 package com.example.demo.service.email;
 
+import com.example.demo.entity.member.MemberEntity;
 import com.example.demo.repository.member.MemberRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -19,10 +24,15 @@ public class EmailServiceImpl implements EmailService{
     private final JavaMailSender mailSender;
     private final StringRedisTemplate redisTemplate;
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // Redis 키 prefix
     private static final String VERIFY_CODE_PREFIX = "email:verify:"; // 인증 코드 (TTL 5분)
     private static final String VERIFIED_PREFIX = "email:verified:"; // 인증 완료 (TTL 10분)
+    private static final String RESET_TOKEN_PREFIX = "reset:"; //비밀번호 재설정 토큰 (TTL 30분)
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontedUrl;
 
     // 인증 코드 발송
     @Override
@@ -118,6 +128,63 @@ public class EmailServiceImpl implements EmailService{
     /** 인증 완료 키 삭제 (회원가입 완료 후 처리)*/
     public void deleteVerified(String email){
         redisTemplate.delete(VERIFIED_PREFIX+email);
+    }
+
+
+    // 비밀번호 재설정 링크 발송
+    @Override
+    public void sendPasswordResetLink(String username, String email) {
+        MemberEntity member = memberRepository.findByUsernameAndEmail(username,email)
+                .orElseThrow(()->new IllegalArgumentException("아이디와 이메일 정보가 일치하지 않습니다."));
+
+        String token = UUID.randomUUID().toString();
+        redisTemplate.opsForValue().set(
+                RESET_TOKEN_PREFIX + token,
+                String.valueOf(member.getMemberId()),
+                Duration.ofMinutes(30)
+        );
+
+        String resetLink = frontedUrl + "/reset-password?token="+token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("[Semicolon] 비밀번호 재설정 링크");
+        message.setText(
+                "안녕하세요 Semicolon입니다. \n\n"+
+                "아래 링크를 클릭하여 새 비밀번호를 설정해주세요\n"+
+                        resetLink+"\n\n"+
+                        "링크는 30분간 유효합니다.\n"+
+                        "본인이 요청하지 않은 경우 이 메일을 무시해주세요."
+        );
+        mailSender.send(message);
+        log.info("[Email] 비밀번호 재설정 링크 발송 완료 -email = {}",email);
+    }
+
+    // 토큰 유효성 확인 (프론트 진입 시 사전 체크용)
+    @Override
+    public boolean isValidResetToken(String token) {
+        return redisTemplate.hasKey(RESET_TOKEN_PREFIX + token);
+    }
+
+    // 비밀번호 재설정 관리
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        String memberIdStr = redisTemplate.opsForValue().get(RESET_TOKEN_PREFIX + token);
+        if(memberIdStr == null){
+            throw new IllegalArgumentException("유효하지 않거나 만료된 링크입니다.");
+        }
+        Long memberId = Long.parseLong(memberIdStr);
+        MemberEntity member = memberRepository.findById(memberId).orElseThrow(()-> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        if(passwordEncoder.matches(newPassword,member.getPassword())){
+            throw new IllegalArgumentException("현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
+        }
+
+        member.setPassword(passwordEncoder.encode(newPassword));
+
+        redisTemplate.delete(RESET_TOKEN_PREFIX+token);
+        log.info("[Email] 비밀번호 재설정 완료 memberId={}",memberId);
     }
 }
 
