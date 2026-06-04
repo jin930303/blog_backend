@@ -24,10 +24,10 @@ public class BoardDocument {
     @Field(type = FieldType.Long)
     private Long boardId;
 
-    @Field(type = FieldType.Text, analyzer = "nori_edge_ngram",searchAnalyzer = "nori_edge_ngram")
+    @Field(type = FieldType.Text, analyzer = "nori_ngram",searchAnalyzer = "nori")
     private String title;
 
-    @Field(type = FieldType.Text, analyzer = "nori_edge_ngram",searchAnalyzer = "nori_edge_ngram")
+    @Field(type = FieldType.Text, analyzer = "nori_ngram",searchAnalyzer = "nori")
     private String contentSummary;
 
     @Field(type = FieldType.Keyword)
