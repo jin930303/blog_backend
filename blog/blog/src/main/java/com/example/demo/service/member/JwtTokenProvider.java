@@ -65,8 +65,8 @@ public class JwtTokenProvider {
     public void addTokenToCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from("accessToken", token)
                 .httpOnly(true)
-                .secure(true)          // ngrok은 HTTPS니까 항상 true
-                .sameSite("None")      // cross-site 쿠키 허용 (핵심!)
+                .secure(cookieSecure)          // ngrok은 HTTPS니까 항상 true
+                .sameSite(cookieSecure ? "None" : "Lax")      // cross-site 쿠키 허용 (핵심!)
                 .path("/")
                 .maxAge(Duration.ofMinutes(30))
                 .build();

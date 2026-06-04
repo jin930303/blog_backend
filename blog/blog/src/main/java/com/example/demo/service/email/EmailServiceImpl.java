@@ -31,7 +31,7 @@ public class EmailServiceImpl implements EmailService{
     private static final String VERIFIED_PREFIX = "email:verified:"; // 인증 완료 (TTL 10분)
     private static final String RESET_TOKEN_PREFIX = "reset:"; //비밀번호 재설정 토큰 (TTL 30분)
 
-    @Value("${frontend.url:http://localhost:3000}")
+    @Value("${frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
     // 인증 코드 발송

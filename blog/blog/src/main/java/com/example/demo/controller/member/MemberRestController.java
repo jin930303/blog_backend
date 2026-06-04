@@ -180,6 +180,7 @@ public class MemberRestController {
                         "username",username,
                         "nickname",memberDTO.getNickname(),
                         "email",memberDTO.getEmail(),
+                        "provider",memberDTO.getProvider(),
                         "message","마이페이지 정보 조회 성공"));
 
 
