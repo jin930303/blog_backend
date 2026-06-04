@@ -6,9 +6,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
+
+import java.time.Duration;
 import java.util.Date;
 
 import java.security.Key;
@@ -59,20 +63,14 @@ public class JwtTokenProvider {
 
     // 토큰 저장 방식 강화하기, JWT를 HttpOnly 쿠키로 관리
     public void addTokenToCookie(HttpServletResponse response, String token) {
-        // 1. HttpOnly 쿠키 생성
-        Cookie cookie = new Cookie("accessToken", token);
+        ResponseCookie cookie = ResponseCookie.from("accessToken", token)
+                .httpOnly(true)
+                .secure(true)          // ngrok은 HTTPS니까 항상 true
+                .sameSite("None")      // cross-site 쿠키 허용 (핵심!)
+                .path("/")
+                .maxAge(Duration.ofMinutes(30))
+                .build();
 
-        // 2. 보안 설정 적용하기
-        // HttpOnly: JavaScript 접근 불가 -> 보안관련 공격 방어
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        // 쿠키가 전송될 경로 설정(모든 곳으로)
-        cookie.setPath("/");
-
-        // 쿠키 만료 시간 30분
-        cookie.setMaxAge(30*60);
-
-        // 3. 응답에 쿠키 추가하기
-        response.addCookie(cookie);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }

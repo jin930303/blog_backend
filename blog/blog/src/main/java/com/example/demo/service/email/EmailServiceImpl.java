@@ -31,8 +31,8 @@ public class EmailServiceImpl implements EmailService{
     private static final String VERIFIED_PREFIX = "email:verified:"; // 인증 완료 (TTL 10분)
     private static final String RESET_TOKEN_PREFIX = "reset:"; //비밀번호 재설정 토큰 (TTL 30분)
 
-    @Value("${app.frontend.url:http://localhost:3000}")
-    private String frontedUrl;
+    @Value("${frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     // 인증 코드 발송
     @Override
@@ -144,7 +144,7 @@ public class EmailServiceImpl implements EmailService{
                 Duration.ofMinutes(30)
         );
 
-        String resetLink = frontedUrl + "/reset-password?token="+token;
+        String resetLink = frontendUrl + "/reset-password?token="+token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
