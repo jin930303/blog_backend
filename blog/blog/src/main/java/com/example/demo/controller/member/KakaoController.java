@@ -34,8 +34,8 @@ public class KakaoController {
 //        this.jwtTokenProvider = jwtTokenProvider;
 //    }
 
-    @Value("${fronted.url}")
-    private String frontedUrl;
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     // 로그인 시작 URL 제공
     @GetMapping("/api/v1/oauth/kakao/url")
@@ -92,7 +92,7 @@ public class KakaoController {
             // token= 은 데이터의 key
             // jwtToken 은 데이터의 Value
             // & 를 사용하여 닉네임 파라미터 추가
-            String redirectUrl = frontedUrl
+            String redirectUrl = frontendUrl
 //                    + "?token=" + jwtToken
                     + "?nickname=" + encodeNickname;
 

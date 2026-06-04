@@ -34,15 +34,19 @@ public class SecurityConfig {
 
         // 허용할 출처 목록 (프론트엔드 주소들)
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:5173"
+                "http://localhost:*",
+                "http://172.30.*.*:*",
+                "https://*.ngrok-free.app",
+                "https://*.ngrok-free.dev"
         ));
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
        configuration.setAllowedHeaders(Arrays.asList(
                "Authorization",
                "Content-Type",
                "X-Requested-With",
-               "Cookie"
+               "Cookie",
+               "ngrok-skip-browser-warning"
        ));
         configuration.setExposedHeaders(Arrays.asList("Set-Cookie"));
         configuration.setAllowCredentials(true);
